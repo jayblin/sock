@@ -10,9 +10,9 @@
 
 #else
 
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
+# include <netinet/in.h>
+# include <sys/socket.h>
+# include <unistd.h>
 
 #endif
 
@@ -34,6 +34,19 @@ namespace sock
 		TCP,
 	};
 
+	enum class Status
+	{
+		GOOD,
+		SOCKET_CREATE_ERROR,
+		BIND_ERROR,
+		LISTEN_ERROR,
+		GETADDRINFO_ERROR,
+		ACCEPT_FAILED,
+		SEND_ERROR,
+		SHUTDOWN_ERROR,
+		CONNECT_ERROR,
+	};
+
 	enum Flags
 	{
 		DEFAULT,
@@ -42,6 +55,16 @@ namespace sock
 		PASSIVE = AI_PASSIVE,
 #else
 #endif
+	};
+
+	struct CtorArgs
+	{
+		Domain domain;
+		Type type;
+		Protocol protocol;
+		std::string_view host;
+		std::string_view port;
+		Flags flags {Flags::DEFAULT};
 	};
 
 	void log_error(const std::string_view message);

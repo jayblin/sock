@@ -1,10 +1,11 @@
 #include "sock/socket.hpp"
+#include "sock/utils.hpp"
 #include <string>
 
 #if defined(WIN32) || defined(_WIN32) || \
     defined(__WIN32) && !defined(__CYGWIN__)
 
-static constexpr auto get_address_family(sock::Domain d)
+static constexpr auto get_address_family(const sock::Domain d)
 {
 	switch (d)
 	{
@@ -15,7 +16,7 @@ static constexpr auto get_address_family(sock::Domain d)
 	}
 }
 
-static constexpr auto get_socket_type(sock::Type t)
+static constexpr auto get_socket_type(const sock::Type t)
 {
 	switch (t)
 	{
@@ -24,7 +25,7 @@ static constexpr auto get_socket_type(sock::Type t)
 	}
 }
 
-static constexpr auto get_protocol(sock::Protocol p)
+static constexpr auto get_protocol(const sock::Protocol p)
 {
 	switch (p)
 	{
@@ -33,7 +34,7 @@ static constexpr auto get_protocol(sock::Protocol p)
 	}
 }
 
-sock::Socket::Socket(sock::Socket::CtorArgs args)
+sock::WindowsSocket::WindowsSocket(const sock::CtorArgs args)
 {
 	addrinfo hints;
 
@@ -53,7 +54,7 @@ sock::Socket::Socket(sock::Socket::CtorArgs args)
 
 	if (getaddrinfo_result != 0)
 	{
-		status(sock::Socket::Status::GETADDRINFO_ERROR);
+		m_status = sock::Status::GETADDRINFO_ERROR;
 		return;
 	}
 
@@ -65,11 +66,11 @@ sock::Socket::Socket(sock::Socket::CtorArgs args)
 
 	if (INVALID_SOCKET == m_sock)
 	{
-		status(sock::Socket::Status::SOCKET_CREATE_ERROR);
+		m_status = sock::Status::SOCKET_CREATE_ERROR;
 	}
 }
 
-sock::Socket::~Socket()
+sock::WindowsSocket::~WindowsSocket()
 {
 	freeaddrinfo(m_addrinfo);
 	closesocket(m_sock);
@@ -77,7 +78,7 @@ sock::Socket::~Socket()
 
 static auto _bind = bind;
 
-sock::Socket& sock::Socket::bind()
+sock::WindowsSocket& sock::WindowsSocket::bind()
 {
 	// bind socket to ip address and port
 	const auto bind_result =
@@ -85,7 +86,7 @@ sock::Socket& sock::Socket::bind()
 
 	if (SOCKET_ERROR == bind_result)
 	{
-		status(sock::Socket::Status::BIND_ERROR);
+		m_status = sock::Status::BIND_ERROR;
 	}
 
 	return *this;
@@ -93,11 +94,11 @@ sock::Socket& sock::Socket::bind()
 
 static auto _listen = listen;
 
-sock::Socket& sock::Socket::listen(size_t backlog)
+sock::WindowsSocket& sock::WindowsSocket::listen(size_t backlog)
 {
 	if (_listen(m_sock, backlog) == SOCKET_ERROR)
 	{
-		status(sock::Socket::Status::LISTEN_ERROR);
+		m_status = sock::Status::LISTEN_ERROR;
 	}
 
 	return *this;
@@ -105,7 +106,7 @@ sock::Socket& sock::Socket::listen(size_t backlog)
 
 static auto _connect = connect;
 
-sock::Socket& sock::Socket::connect()
+sock::WindowsSocket& sock::WindowsSocket::connect()
 {
 	// Try to connect to ip until succeded or failed
 	for (auto ptr = m_addrinfo; ptr != NULL; ptr = ptr->ai_next)
@@ -118,13 +119,13 @@ sock::Socket& sock::Socket::connect()
 		if (_connect(m_sock, ptr->ai_addr, (int) ptr->ai_addrlen) ==
 		    SOCKET_ERROR)
 		{
-			status(sock::Socket::Status::CONNECT_ERROR);
+			m_status = sock::Status::CONNECT_ERROR;
 			closesocket(m_sock);
 			m_sock = INVALID_SOCKET;
 		}
 		else
 		{
-			status(sock::Socket::Status::GOOD);
+			m_status = sock::Status::GOOD;
 			break;
 		}
 	}
@@ -134,14 +135,14 @@ sock::Socket& sock::Socket::connect()
 
 static auto _accept = accept;
 
-sock::Socket sock::Socket::accept()
+sock::WindowsSocket sock::WindowsSocket::accept()
 {
-	return sock::Socket {_accept(m_sock, NULL, NULL)};
+	return sock::WindowsSocket {_accept(m_sock, NULL, NULL)};
 }
 
 static auto _receive = recv;
 
-void sock::Socket::receive(sock::Buffer& buff, int flags)
+void sock::WindowsSocket::receive(sock::Buffer& buff, int flags)
 {
 	buff.reset();
 	auto n = _receive(m_sock, buff.buffer(), buff.max_size() - 1, flags);
@@ -150,13 +151,13 @@ void sock::Socket::receive(sock::Buffer& buff, int flags)
 
 static auto _send = send;
 
-sock::Socket& sock::Socket::send(std::string&& str)
+sock::WindowsSocket& sock::WindowsSocket::send(const std::string_view str)
 {
 	auto send_result = _send(m_sock, str.data(), str.length(), 0);
 
 	if (send_result == SOCKET_ERROR)
 	{
-		status(sock::Socket::Status::SEND_ERROR);
+		m_status = sock::Status::SEND_ERROR;
 	}
 
 	return *this;
@@ -164,13 +165,13 @@ sock::Socket& sock::Socket::send(std::string&& str)
 
 static auto _shutdown = shutdown;
 
-void sock::Socket::shutdown()
+void sock::WindowsSocket::shutdown()
 {
 	const auto shutdown_result = _shutdown(m_sock, SD_SEND);
 
 	if (shutdown_result == SOCKET_ERROR)
 	{
-		status(sock::Socket::Status::SHUTDOWN_ERROR);
+		m_status = sock::Status::SHUTDOWN_ERROR;
 	}
 }
 

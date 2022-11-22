@@ -30,7 +30,7 @@ sock::SocketFactory::~SocketFactory()
 #endif
 }
 
-sock::Socket sock::SocketFactory::create(Socket::CtorArgs&& args) const
+sock::Socket sock::SocketFactory::create(CtorArgs&& args) const
 {
 	return sock::Socket {args};
 }

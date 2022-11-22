@@ -1,6 +1,7 @@
 #ifndef SOCK_SOCKET_FACTORY_H_
 #define SOCK_SOCKET_FACTORY_H_
 
+#include "sock/utils.hpp"
 #include "socket.hpp"
 
 namespace sock
@@ -20,7 +21,7 @@ namespace sock
 			return _instance;
 		}
 
-		auto create(Socket::CtorArgs&&) const -> Socket;
+		auto create(CtorArgs&&) const -> Socket;
 
 	private:
 		SocketFactory();
