@@ -1,14 +1,13 @@
-#ifndef SOCKET_H_
-#define SOCKET_H_
+#ifndef SOCKET_INTERNAL_CONCEPTS_H_
+#define SOCKET_INTERNAL_CONCEPTS_H_
 
 #include "sock/buffer.hpp"
 #include "sock/utils.hpp"
 #include <concepts>
 #include <functional>
 #include <string_view>
-#include <type_traits>
 
-namespace sock
+namespace sock::internal
 {
 	template<class T>
 	concept has_socket_interface = requires(
@@ -41,4 +40,4 @@ namespace sock
 
 } // namespace sock
 
-#endif // SOCKET_H_
+#endif // SOCKET_INTERNAL_CONCEPTS_H_

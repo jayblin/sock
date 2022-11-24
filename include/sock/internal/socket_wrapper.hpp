@@ -2,11 +2,10 @@
 #define SOCK_INTERNAL_SOCKET_WRAPPER_H_
 
 #include "sock/internal/socket.hpp"
-#include "sock/socket.hpp"
 #include "sock/utils.hpp"
-#include <string>
 #include <string_view>
 #include <utility>
+#include <functional>
 
 namespace sock::internal
 {

@@ -1,5 +1,4 @@
 #include "sock/utils.hpp"
-#include <cstring>
 #include <iostream>
 #include <string>
 #include <string_view>

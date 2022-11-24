@@ -1,4 +1,4 @@
-#include "sock/unix_socket.hpp"
+#include "sock/internal/unix_socket.hpp"
 #include "sock/utils.hpp"
 #include <algorithm>
 #include <iostream>
@@ -43,7 +43,7 @@ static constexpr auto get_option_name(const sock::Option o)
 	}
 }
 
-sock::UnixSocket::UnixSocket(const sock::CtorArgs args)
+sock::internal::UnixSocket::UnixSocket(const sock::CtorArgs args)
 {
 	m_fd = socket(
 		get_address_family(args.domain),
@@ -64,7 +64,7 @@ sock::UnixSocket::UnixSocket(const sock::CtorArgs args)
 	/* m_args = std::move(args); */
 }
 
-sock::UnixSocket::~UnixSocket()
+sock::internal::UnixSocket::~UnixSocket()
 {
 	if (m_fd >= 0)
 	{
@@ -73,7 +73,7 @@ sock::UnixSocket::~UnixSocket()
 	}
 }
 
-sock::UnixSocket& sock::UnixSocket::option(const sock::Option opt, const int val)
+sock::internal::UnixSocket& sock::internal::UnixSocket::option(const sock::Option opt, const int val)
 {
 	const auto result = setsockopt(
 		m_fd,
@@ -94,7 +94,7 @@ sock::UnixSocket& sock::UnixSocket::option(const sock::Option opt, const int val
 
 static auto _bind = bind;
 
-sock::UnixSocket& sock::UnixSocket::bind()
+sock::internal::UnixSocket& sock::internal::UnixSocket::bind()
 {
 	// bind socket to ip address and port
 	const auto bind_result = _bind(
@@ -113,7 +113,7 @@ sock::UnixSocket& sock::UnixSocket::bind()
 
 static auto _listen = listen;
 
-sock::UnixSocket& sock::UnixSocket::listen(size_t max_connections)
+sock::internal::UnixSocket& sock::internal::UnixSocket::listen(size_t max_connections)
 {
 	if (_listen(m_fd, max_connections) < 0)
 	{
@@ -125,7 +125,7 @@ sock::UnixSocket& sock::UnixSocket::listen(size_t max_connections)
 
 static auto _connect = connect;
 
-sock::UnixSocket& sock::UnixSocket::connect()
+sock::internal::UnixSocket& sock::internal::UnixSocket::connect()
 {
 	const auto result = _connect(
 		m_fd,
@@ -143,11 +143,11 @@ sock::UnixSocket& sock::UnixSocket::connect()
 
 static auto _accept = accept;
 
-sock::UnixSocket sock::UnixSocket::accept()
+sock::internal::UnixSocket sock::internal::UnixSocket::accept()
 {
 	m_client_len = sizeof(m_client_addr);
 
-	return sock::UnixSocket {_accept(
+	return sock::internal::UnixSocket {_accept(
 		m_fd,
 		reinterpret_cast<sockaddr*>(&m_client_addr),
 		&m_client_len
@@ -156,7 +156,7 @@ sock::UnixSocket sock::UnixSocket::accept()
 
 static auto _receive = recv;
 
-void sock::UnixSocket::receive(sock::Buffer& buff, int flags)
+void sock::internal::UnixSocket::receive(sock::Buffer& buff, int flags)
 {
 	buff.reset();
 	auto n = _receive(m_fd, buff.buffer(), buff.max_size() - 1, flags);
@@ -165,7 +165,7 @@ void sock::UnixSocket::receive(sock::Buffer& buff, int flags)
 
 static auto _send = send;
 
-sock::UnixSocket& sock::UnixSocket::send(const std::string_view str)
+sock::internal::UnixSocket& sock::internal::UnixSocket::send(const std::string_view str)
 {
 	auto send_result = _send(m_fd, str.data(), str.length(), 0);
 
@@ -179,7 +179,7 @@ sock::UnixSocket& sock::UnixSocket::send(const std::string_view str)
 
 static auto _shutdown = shutdown;
 
-void sock::UnixSocket::shutdown()
+void sock::internal::UnixSocket::shutdown()
 {
 	const auto shutdown_result = _shutdown(m_fd, SHUT_RDWR);
 

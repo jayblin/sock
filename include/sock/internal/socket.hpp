@@ -4,20 +4,20 @@
 #if defined(WIN32) || defined(_WIN32) || \
     defined(__WIN32) && !defined(__CYGWIN__)
 
-#include "sock/windows_socket.hpp"
+#include "sock/internal/windows_socket.hpp"
 
 namespace sock::internal
 {
-	typedef sock::WindowsSocket Socket;
+	typedef WindowsSocket Socket;
 } // namespace sock
 
 #else
 
-#include "sock/unix_socket.hpp"
+#include "sock/internal/unix_socket.hpp"
 
 namespace sock::internal
 {
-	typedef sock::UnixSocket Socket;
+	typedef UnixSocket Socket;
 } // namespace sock
 
 #endif

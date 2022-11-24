@@ -1,10 +1,10 @@
 #ifndef SOCK_SOCKET_FACTORY_H_
 #define SOCK_SOCKET_FACTORY_H_
 
+#include "sock/internal/concepts.hpp"
 #include "sock/internal/socket_wrapper.hpp"
-#include "sock/utils.hpp"
 #include "sock/internal/socket.hpp"
-#include "sock/socket.hpp"
+#include "sock/utils.hpp"
 #include <functional>
 #include <utility>
 
@@ -27,7 +27,7 @@ namespace sock
 		auto create() -> sock::internal::SocketWrapper
 		{
 			static_assert(
-				sock::is_socket<sock::internal::SocketWrapper, sock::Status>
+				sock::internal::is_socket<sock::internal::SocketWrapper, sock::Status>
 			);
 
 			return sock::internal::SocketWrapper(
@@ -65,7 +65,7 @@ namespace sock
 		auto create(const CtorArgs args) const -> internal::Socket
 		{
 			static_assert(
-				sock::is_socket<sock::internal::Socket, sock::Status>
+				sock::internal::is_socket<sock::internal::Socket, sock::Status>
 			);
 
 			return sock::internal::Socket(std::move(args));

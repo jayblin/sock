@@ -4,10 +4,8 @@
 #include "sock/buffer.hpp"
 #include "sock/utils.hpp"
 #include <functional>
-#include <netinet/in.h>
-#include <sys/socket.h>
 
-namespace sock
+namespace sock::internal
 {
 	class UnixSocket
 	{
@@ -46,7 +44,7 @@ namespace sock
 		auto listen(const size_t backlog) -> UnixSocket&;
 		auto connect() -> UnixSocket&;
 		auto accept() -> UnixSocket;
-		auto receive(Buffer&, int flags = 0) -> void;
+		auto receive(sock::Buffer&, int flags = 0) -> void;
 		auto send(const std::string_view) -> UnixSocket&;
 		auto shutdown() -> void;
 

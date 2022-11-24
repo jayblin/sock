@@ -1,5 +1,4 @@
-#include "sock/internal/socket.hpp"
-#include "sock/socket.hpp"
+#include "sock/internal/windows_socket.hpp"
 #include "sock/utils.hpp"
 #include <algorithm>
 #include <iostream>
@@ -43,7 +42,7 @@ static constexpr auto get_option_name(const sock::Option o)
 	}
 }
 
-sock::WindowsSocket::WindowsSocket(const sock::CtorArgs args)
+sock::internal::WindowsSocket::WindowsSocket(const sock::CtorArgs args)
 {
 	addrinfo hints;
 
@@ -79,13 +78,13 @@ sock::WindowsSocket::WindowsSocket(const sock::CtorArgs args)
 	}
 }
 
-sock::WindowsSocket::~WindowsSocket()
+sock::internal::WindowsSocket::~WindowsSocket()
 {
 	freeaddrinfo(m_addrinfo);
 	closesocket(m_sock);
 }
 
-sock::WindowsSocket& sock::WindowsSocket::option(
+sock::internal::WindowsSocket& sock::internal::WindowsSocket::option(
 	const sock::Option option,
 	const int value
 )
@@ -106,7 +105,7 @@ sock::WindowsSocket& sock::WindowsSocket::option(
 
 static auto _bind = bind;
 
-sock::WindowsSocket& sock::WindowsSocket::bind()
+sock::internal::WindowsSocket& sock::internal::WindowsSocket::bind()
 {
 	// bind socket to ip address and port
 	const auto bind_result =
@@ -122,7 +121,7 @@ sock::WindowsSocket& sock::WindowsSocket::bind()
 
 static auto _listen = listen;
 
-sock::WindowsSocket& sock::WindowsSocket::listen(size_t backlog)
+sock::internal::WindowsSocket& sock::internal::WindowsSocket::listen(size_t backlog)
 {
 	if (_listen(m_sock, backlog) == SOCKET_ERROR)
 	{
@@ -134,7 +133,7 @@ sock::WindowsSocket& sock::WindowsSocket::listen(size_t backlog)
 
 static auto _connect = connect;
 
-sock::WindowsSocket& sock::WindowsSocket::connect()
+sock::internal::WindowsSocket& sock::internal::WindowsSocket::connect()
 {
 	// Try to connect to ip until succeded or failed
 	for (auto ptr = m_addrinfo; ptr != NULL; ptr = ptr->ai_next)
@@ -163,14 +162,14 @@ sock::WindowsSocket& sock::WindowsSocket::connect()
 
 static auto _accept = accept;
 
-sock::WindowsSocket sock::WindowsSocket::accept()
+sock::internal::WindowsSocket sock::internal::WindowsSocket::accept()
 {
-	return sock::WindowsSocket {_accept(m_sock, NULL, NULL)};
+	return sock::internal::WindowsSocket {_accept(m_sock, NULL, NULL)};
 }
 
 static auto _receive = recv;
 
-void sock::WindowsSocket::receive(sock::Buffer& buff, int flags)
+void sock::internal::WindowsSocket::receive(sock::Buffer& buff, int flags)
 {
 	buff.reset();
 	auto n = _receive(m_sock, buff.buffer(), buff.max_size() - 1, flags);
@@ -179,7 +178,7 @@ void sock::WindowsSocket::receive(sock::Buffer& buff, int flags)
 
 static auto _send = send;
 
-sock::WindowsSocket& sock::WindowsSocket::send(const std::string_view str)
+sock::internal::WindowsSocket& sock::internal::WindowsSocket::send(const std::string_view str)
 {
 	auto send_result = _send(m_sock, str.data(), str.length(), 0);
 
@@ -193,7 +192,7 @@ sock::WindowsSocket& sock::WindowsSocket::send(const std::string_view str)
 
 static auto _shutdown = shutdown;
 
-void sock::WindowsSocket::shutdown()
+void sock::internal::WindowsSocket::shutdown()
 {
 	const auto shutdown_result = _shutdown(m_sock, SD_SEND);
 

@@ -4,7 +4,7 @@
 #include "sock/buffer.hpp"
 #include "sock/utils.hpp"
 
-namespace sock
+namespace sock::internal
 {
 	class WindowsSocket
 	{
@@ -41,7 +41,7 @@ namespace sock
 		auto listen(const size_t backlog) -> WindowsSocket&;
 		auto connect() -> WindowsSocket&;
 		auto accept() -> WindowsSocket;
-		auto receive(Buffer&, int flags = 0) -> void;
+		auto receive(sock::Buffer&, int flags = 0) -> void;
 		auto send(const std::string_view) -> WindowsSocket&;
 		auto shutdown() -> void;
 

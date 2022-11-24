@@ -2,6 +2,7 @@
 #define SOCK_UTILS_H_
 
 #include <string_view>
+
 #if defined(WIN32) || defined(_WIN32) || \
     defined(__WIN32) && !defined(__CYGWIN__)
 
@@ -115,7 +116,6 @@ namespace sock
 	 * @see https://learn.microsoft.com/en-us/windows/win32/winsock/windows-sockets-error-codes-2 for windows error codes.
 	 */
 	void log_error(const std::string_view prepend);
-
 } // namespace sock
 
 #endif // SOCK_UTILS_H_
