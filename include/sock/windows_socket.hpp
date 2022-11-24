@@ -12,7 +12,31 @@ namespace sock
 		WindowsSocket();
 		WindowsSocket(SOCKET sock) : m_sock {sock} {};
 		WindowsSocket(const CtorArgs);
+		WindowsSocket(const WindowsSocket&) = delete;
+		WindowsSocket(WindowsSocket&& other)
+		{
+			*this = std::move(other);
+		};
+
 		~WindowsSocket();
+
+		WindowsSocket& operator=(const WindowsSocket&) = delete;
+		WindowsSocket& operator=(WindowsSocket&& other)
+		{
+			if (this != &other)
+			{
+				m_status = other.m_status;
+				m_sock = other.m_sock;
+				m_addrinfo = other.m_addrinfo;
+
+				other.m_addrinfo = nullptr;
+				other.m_sock = -1;
+			}
+
+			return *this;
+		}
+
+		auto option(const sock::Option, const int value) -> WindowsSocket&;
 		auto bind() -> WindowsSocket&;
 		auto listen(const size_t backlog) -> WindowsSocket&;
 		auto connect() -> WindowsSocket&;

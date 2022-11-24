@@ -9,7 +9,7 @@
 
 void sock::log_error(const std::string_view prepend)
 {
-	std::cout << message << " [" << std::to_string(WSAGetLastError()) << "]" << std::endl;
+	std::cout << prepend << " [" << std::to_string(WSAGetLastError()) << "]" << std::endl;
 }
 
 #else
