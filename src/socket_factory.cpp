@@ -29,8 +29,3 @@ sock::SocketFactory::~SocketFactory()
 	// UNIX SOCKET LIB CLEANUP HERE
 #endif
 }
-
-sock::Socket sock::SocketFactory::create(CtorArgs&& args) const
-{
-	return sock::Socket {args};
-}

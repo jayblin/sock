@@ -1,5 +1,8 @@
+#include "sock/internal/socket.hpp"
 #include "sock/socket.hpp"
 #include "sock/utils.hpp"
+#include <algorithm>
+#include <iostream>
 #include <string>
 
 #if defined(WIN32) || defined(_WIN32) || \
@@ -176,5 +179,7 @@ void sock::WindowsSocket::shutdown()
 }
 
 #else
+
+#include "unix_socket.cpp"
 
 #endif

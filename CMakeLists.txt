@@ -28,7 +28,6 @@ target_include_directories(
 target_link_libraries(
 	sock
 	PUBLIC
-		sql
 		${EXTRA_LIBS}
 )
 
