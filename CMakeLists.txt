@@ -38,6 +38,5 @@ target_link_libraries(
 )
 
 if (SOCK_BUILD_TESTS)
-	message('aaaa')
     add_subdirectory(tests)
 endif()
