@@ -11,9 +11,9 @@ option(SOCK_BUILD_TESTS "Build test programs" ${SOCK_STANDALONE})
 list(
 	APPEND
 	SOURCE_FILES
-	${CMAKE_SOURCE_DIR}/src/socket.cpp
-	${CMAKE_SOURCE_DIR}/src/socket_factory.cpp
-	${CMAKE_SOURCE_DIR}/src/utils.cpp
+	${PROJECT_SOURCE_DIR}/src/socket.cpp
+	${PROJECT_SOURCE_DIR}/src/socket_factory.cpp
+	${PROJECT_SOURCE_DIR}/src/utils.cpp
 )
 
 add_library(sock SHARED ${SOURCE_FILES})

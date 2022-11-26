@@ -31,7 +31,7 @@ set_property(TARGET sock_tests PROPERTY CXX_STANDARD 20)
 target_include_directories(
 	sock_tests
 	PUBLIC
-		${CMAKE_SOURCE_DIR}/include
+	${PROJECT_SOURCE_DIR}/include
 )
 
 include(GoogleTest)
