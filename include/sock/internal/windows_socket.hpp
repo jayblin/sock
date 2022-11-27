@@ -42,7 +42,7 @@ namespace sock::internal
 		auto connect() -> WindowsSocket&;
 		auto accept() -> WindowsSocket;
 		auto receive(sock::Buffer&, int flags = 0) -> void;
-		auto send(const std::string_view) -> WindowsSocket&;
+		auto send(const std::string_view&) -> WindowsSocket&;
 		auto shutdown() -> void;
 
 		auto is_valid() const -> bool { return m_status != Status::GOOD; };

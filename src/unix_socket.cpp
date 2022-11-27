@@ -165,7 +165,7 @@ void sock::internal::UnixSocket::receive(sock::Buffer& buff, int flags)
 
 static auto _send = send;
 
-sock::internal::UnixSocket& sock::internal::UnixSocket::send(const std::string_view str)
+sock::internal::UnixSocket& sock::internal::UnixSocket::send(const std::string_view& str)
 {
 	auto send_result = _send(m_fd, str.data(), str.length(), 0);
 

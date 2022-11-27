@@ -45,7 +45,7 @@ namespace sock::internal
 		auto connect() -> UnixSocket&;
 		auto accept() -> UnixSocket;
 		auto receive(sock::Buffer&, int flags = 0) -> void;
-		auto send(const std::string_view) -> UnixSocket&;
+		auto send(const std::string_view&) -> UnixSocket&;
 		auto shutdown() -> void;
 
 		constexpr auto is_valid() const -> bool { return m_status != Status::GOOD; }

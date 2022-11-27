@@ -178,7 +178,7 @@ void sock::internal::WindowsSocket::receive(sock::Buffer& buff, int flags)
 
 static auto _send = send;
 
-sock::internal::WindowsSocket& sock::internal::WindowsSocket::send(const std::string_view str)
+sock::internal::WindowsSocket& sock::internal::WindowsSocket::send(const std::string_view& str)
 {
 	auto send_result = _send(m_sock, str.data(), str.length(), 0);
 

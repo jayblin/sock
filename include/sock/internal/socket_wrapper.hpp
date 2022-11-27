@@ -82,7 +82,7 @@ namespace sock::internal
 			m_callback(m_sock);
 		}
 
-		auto send(const std::string_view payload) -> SocketWrapper&
+		auto send(const std::string_view& payload) -> SocketWrapper&
 		{
 			m_sock.send(payload);
 			m_callback(m_sock);
