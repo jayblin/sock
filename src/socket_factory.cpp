@@ -1,4 +1,5 @@
 #include "sock/socket_factory.hpp"
+#include <stdexcept>
 
 sock::SocketFactory::SocketFactory()
 {
@@ -13,7 +14,8 @@ sock::SocketFactory::SocketFactory()
 
 	if (wsa_started != 0)
 	{
-		sock::log_error("couldnt start WSA");
+		/* sock::log_error("couldnt start WSA"); */
+		throw std::runtime_error {"Couldnt start WSA"};
 	}
 #else
 	// UNIX SOCKET LIB INIT HERE

@@ -110,12 +110,7 @@ namespace sock
 		return "UNKNOWN STATUS";
 	}
 
-	/*
-	 * Outputs an error related to sockets with prepended `prepend`.
-	 *
-	 * @see https://learn.microsoft.com/en-us/windows/win32/winsock/windows-sockets-error-codes-2 for windows error codes.
-	 */
-	void log_error(const std::string_view prepend);
+	std::string error();
 } // namespace sock
 
 #endif // SOCK_UTILS_H_

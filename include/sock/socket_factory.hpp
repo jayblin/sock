@@ -3,7 +3,7 @@
 
 #include "sock/internal/concepts.hpp"
 #include "sock/internal/socket_wrapper.hpp"
-#include "sock/internal/socket.hpp"
+#include "sock/socket.hpp"
 #include "sock/utils.hpp"
 #include <functional>
 #include <utility>
@@ -15,8 +15,12 @@ namespace sock
 	public:
 		WrapperBuilder(const CtorArgs args) : m_args {std::move(args)} {};
 
+		/**
+		 * Binds a callback to be called after each `sock::Socket` member
+		 * function call.
+		 */
 		auto with(
-			std::function<void(sock::internal::Socket&)>&& callback
+			std::function<void(sock::Socket&)>&& callback
 		) -> WrapperBuilder&
 		{
 			m_callback = std::move(callback);
@@ -24,6 +28,9 @@ namespace sock
 			return *this;
 		}
 
+		/**
+		 * Creates a socket.
+		 */
 		auto create() -> sock::internal::SocketWrapper
 		{
 			static_assert(
@@ -34,12 +41,11 @@ namespace sock
 				std::move(m_args),
 				std::move(m_callback)
 			);
-;
 		}
 	
 	private:
 		CtorArgs m_args;
-		std::function<void(internal::Socket&)> m_callback;
+		std::function<void(Socket&)> m_callback;
 	};
 
 	/**
@@ -62,10 +68,13 @@ namespace sock
 			return WrapperBuilder {std::move(args)};
 		}
 
-		auto create(const CtorArgs args) const -> internal::Socket
+		/**
+		 * Creates a socket.
+		 */
+		auto create(const CtorArgs args) const -> Socket
 		{
 			static_assert(
-				sock::internal::is_socket<sock::internal::Socket, sock::Status>
+				sock::internal::is_socket<sock::Socket, sock::Status>
 			);
 
 			return sock::internal::Socket(std::move(args));

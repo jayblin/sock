@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 
-TEST(Socket, ServerAndClientFactoryCreate)
+TEST(Socket, server_and_client_communication_test)
 {
 	bool server_closed = false;
 	bool client_closed = false;
@@ -104,15 +104,17 @@ TEST(Socket, ServerAndClientFactoryCreate)
 	ASSERT_TRUE(client_closed);
 }
 
-TEST(Socket, ServerAndClientLogingWrapper)
+TEST(Socket, socket_can_handle_callbacks)
 {
 	bool server_closed = false;
 	bool client_closed = false;
+	std::string sock_error {""};
+	std::string sock_str {""};
 
 	auto& factory = sock::SocketFactory::instance();
 
 	std::thread server_thread {
-	    [&factory, &server_closed]() {
+	    [&factory, &server_closed, &sock_error, &sock_str] () {
 		    auto server = factory
 				.wrap({
 					.domain = sock::Domain::INET,
@@ -121,13 +123,12 @@ TEST(Socket, ServerAndClientLogingWrapper)
 					.port = "9843",
 					.flags = sock::Flags::PASSIVE,
 				})
-				.with([](auto& socket) {
+				.with([&sock_error, &sock_str] (sock::Socket& socket) {
+					sock_str += "a";
+
 					if (socket.status() != sock::Status::GOOD)
 					{
-						sock::log_error(
-							std::string {"Server socket failed "}
-							+ std::string {str_status(socket.status())}
-						);
+						sock_error = sock::error();
 					}
 				})
 				.create()
@@ -166,6 +167,9 @@ TEST(Socket, ServerAndClientLogingWrapper)
 		    connection.send("");
 		    ASSERT_EQ(sock::Status::GOOD, connection.status());
 
+			ASSERT_LT(0, sock_str.length());
+			ASSERT_STREQ("", sock_error.c_str());
+
 			server_closed = true;
 	    }
 	};
@@ -186,10 +190,6 @@ TEST(Socket, ServerAndClientLogingWrapper)
 				.with([](auto& socket) {
 					if (socket.status() != sock::Status::GOOD)
 					{
-						sock::log_error(
-							std::string {"Client socket failed "}
-							+ std::string {str_status(socket.status())}
-						);
 					}
 				})
 				.create()

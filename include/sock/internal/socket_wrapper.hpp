@@ -9,6 +9,10 @@
 
 namespace sock::internal
 {
+	/**
+	 * Same as `sock::Socket` but after each member function call a callback
+	 * is called.
+	 */
 	class SocketWrapper
 	{
 	public:
