@@ -10,9 +10,11 @@ namespace sock::internal
 	{
 	public:
 		WindowsSocket();
-		WindowsSocket(SOCKET sock) : m_sock {sock} {};
-		WindowsSocket(const CtorArgs);
+		WindowsSocket(SOCKET sock) :
+		    m_sock {sock} {};
+		WindowsSocket(CtorArgs);
 		WindowsSocket(const WindowsSocket&) = delete;
+
 		WindowsSocket(WindowsSocket&& other)
 		{
 			*this = std::move(other);
@@ -21,40 +23,45 @@ namespace sock::internal
 		~WindowsSocket();
 
 		WindowsSocket& operator=(const WindowsSocket&) = delete;
+
 		WindowsSocket& operator=(WindowsSocket&& other)
 		{
 			if (this != &other)
 			{
 				m_status = other.m_status;
 				m_sock = other.m_sock;
-				m_addrinfo = other.m_addrinfo;
+				m_hints = other.m_hints;
 
-				other.m_addrinfo = nullptr;
 				other.m_sock = -1;
 			}
 
 			return *this;
 		}
 
-		auto option(const sock::Option, const int value) -> WindowsSocket&;
-		auto bind() -> WindowsSocket&;
-		auto listen(const size_t backlog) -> WindowsSocket&;
-		auto connect() -> WindowsSocket&;
+		auto option(sock::Option, int value) -> WindowsSocket&;
+		auto bind(sock::Address) -> WindowsSocket&;
+		auto listen(size_t backlog) -> WindowsSocket&;
+		auto connect(sock::Address) -> WindowsSocket&;
 		auto accept() -> WindowsSocket;
 		auto receive(sock::Buffer&, int flags = 0) -> void;
-		auto send(const std::string_view&) -> WindowsSocket&;
+		auto send(std::string_view) -> WindowsSocket&;
 		auto shutdown() -> void;
 
-		auto is_valid() const -> bool { return m_status != Status::GOOD; };
+		auto is_valid() const -> bool
+		{
+			return m_status != Status::GOOD;
+		};
 
-		auto status() const -> Status { return m_status; };
+		auto status() const -> Status
+		{
+			return m_status;
+		};
 
 	private:
 		Status m_status {Status::GOOD};
-
 		SOCKET m_sock {INVALID_SOCKET};
-		addrinfo* m_addrinfo {nullptr};
+		addrinfo m_hints;
 	};
-} // namespace sock
+} // namespace sock::internal
 
 #endif // SOCK_WINDOWS_SOCKET_H_

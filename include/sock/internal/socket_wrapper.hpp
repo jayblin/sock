@@ -3,9 +3,9 @@
 
 #include "sock/internal/socket.hpp"
 #include "sock/utils.hpp"
+#include <functional>
 #include <string_view>
 #include <utility>
-#include <functional>
 
 namespace sock::internal
 {
@@ -16,31 +16,30 @@ namespace sock::internal
 	class SocketWrapper
 	{
 	public:
-		SocketWrapper(const sock::CtorArgs args)
-			: m_sock {std::move(sock::internal::Socket{std::move(args)})}
-		{};
+		SocketWrapper(sock::CtorArgs args) :
+		    m_sock {sock::internal::Socket {std::move(args)}} {};
 
 		SocketWrapper(
-			const sock::CtorArgs args,
-			std::function<void(sock::internal::Socket&)> callback
+		    sock::CtorArgs args,
+		    std::function<void(sock::internal::Socket&)> callback
 		) :
-			m_sock {std::move(sock::internal::Socket{std::move(args)})},
-			m_callback {callback}
+		    m_sock {sock::internal::Socket {std::move(args)}},
+		    m_callback {callback}
 		{
 			m_callback(m_sock);
 		}
 
 		SocketWrapper(
-			sock::internal::Socket&& socket,
-			std::function<void(sock::internal::Socket&)> callback
+		    sock::internal::Socket&& socket,
+		    std::function<void(sock::internal::Socket&)> callback
 		) :
-			m_sock {std::move(socket)},
-			m_callback {callback}
+		    m_sock {std::move(socket)},
+		    m_callback {callback}
 		{
 			m_callback(m_sock);
 		}
 
-		auto option(const sock::Option opt, const bool val) -> SocketWrapper&
+		auto option(sock::Option opt, int val) -> SocketWrapper&
 		{
 			m_sock.option(opt, val);
 			m_callback(m_sock);
@@ -48,9 +47,9 @@ namespace sock::internal
 			return *this;
 		}
 
-		auto bind() -> SocketWrapper&
+		auto bind(sock::Address address) -> SocketWrapper&
 		{
-			m_sock.bind();
+			m_sock.bind(address);
 			m_callback(m_sock);
 
 			return *this;
@@ -64,9 +63,9 @@ namespace sock::internal
 			return *this;
 		}
 
-		auto connect() -> SocketWrapper&
+		auto connect(sock::Address address) -> SocketWrapper&
 		{
-			m_sock.connect();
+			m_sock.connect(address);
 			m_callback(m_sock);
 
 			return *this;
@@ -80,13 +79,13 @@ namespace sock::internal
 			return result;
 		}
 
-		auto receive(Buffer& buffer, int flags = 0) -> void
+		auto receive(sock::Buffer& buffer, int flags = 0) -> void
 		{
 			m_sock.receive(buffer, flags);
 			m_callback(m_sock);
 		}
 
-		auto send(const std::string_view& payload) -> SocketWrapper&
+		auto send(std::string_view payload) -> SocketWrapper&
 		{
 			m_sock.send(payload);
 			m_callback(m_sock);
@@ -114,6 +113,6 @@ namespace sock::internal
 		sock::internal::Socket m_sock;
 		std::function<void(sock::internal::Socket&)> m_callback;
 	};
-}
+} // namespace sock::internal
 
 #endif // SOCK_INTERNAL_SOCKET_WRAPPER_H_

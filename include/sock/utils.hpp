@@ -3,17 +3,17 @@
 
 #include <string_view>
 
-#if defined(WIN32) || defined(_WIN32) || \
-    defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(WIN32) || defined(_WIN32) \
+    || defined(__WIN32) && !defined(__CYGWIN__)
 
-# include <winsock2.h>
-# include <ws2tcpip.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 
 #else
 
-# include <netinet/in.h>
-# include <sys/socket.h>
-# include <unistd.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 #endif
 
@@ -52,8 +52,8 @@ namespace sock
 	enum Flags
 	{
 		DEFAULT = 0,
-#if defined(WIN32) || defined(_WIN32) || \
-    defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(WIN32) || defined(_WIN32) \
+    || defined(__WIN32) && !defined(__CYGWIN__)
 		PASSIVE = AI_PASSIVE,
 #else
 		PASSIVE = 0,
@@ -61,7 +61,8 @@ namespace sock
 	};
 
 	/*
-	 * @see https://learn.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-setsockopt
+	 * @see
+	 * https://learn.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-setsockopt
 	 * @see https://man7.org/linux/man-pages/man7/socket.7.html
 	 *
 	 * @TODO: Add all options maybe?
@@ -76,9 +77,13 @@ namespace sock
 		Domain domain;
 		Type type;
 		Protocol protocol;
+		Flags flags {Flags::DEFAULT};
+	};
+
+	struct Address
+	{
 		std::string_view host;
 		std::string_view port;
-		Flags flags {Flags::DEFAULT};
 	};
 
 	constexpr std::string_view str_status(sock::Status status)

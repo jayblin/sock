@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 
-static constexpr auto get_address_family(const sock::Domain d)
+static constexpr auto get_address_family(sock::Domain d)
 {
 	switch (d)
 	{
@@ -15,7 +15,7 @@ static constexpr auto get_address_family(const sock::Domain d)
 	}
 }
 
-static constexpr auto get_socket_type(const sock::Type t)
+static constexpr auto get_socket_type(sock::Type t)
 {
 	switch (t)
 	{
@@ -24,7 +24,7 @@ static constexpr auto get_socket_type(const sock::Type t)
 	}
 }
 
-static constexpr auto get_protocol(const sock::Protocol p)
+static constexpr auto get_protocol(sock::Protocol p)
 {
 	switch (p)
 	{
@@ -33,7 +33,7 @@ static constexpr auto get_protocol(const sock::Protocol p)
 	}
 }
 
-static constexpr auto get_option_name(const sock::Option o)
+static constexpr auto get_option_name(sock::Option o)
 {
 	switch (o)
 	{
@@ -42,35 +42,22 @@ static constexpr auto get_option_name(const sock::Option o)
 	}
 }
 
-sock::internal::WindowsSocket::WindowsSocket(const sock::CtorArgs args)
+const auto _socket = socket;
+
+sock::internal::WindowsSocket::WindowsSocket(sock::CtorArgs args)
 {
 	addrinfo hints;
 
 	ZeroMemory(&hints, sizeof(hints));
+
 	hints.ai_family = get_address_family(args.domain);
 	hints.ai_socktype = get_socket_type(args.type);
 	hints.ai_protocol = get_protocol(args.protocol);
 	hints.ai_flags = args.flags;
 
-	// Resolve the local address and port to be used by the server
-	auto getaddrinfo_result = getaddrinfo(
-	    args.host.length() > 0 ? args.host.data() : NULL,
-	    args.port.data(),
-	    &hints,
-	    &m_addrinfo
-	);
+	m_sock = _socket(hints.ai_family, hints.ai_socktype, hints.ai_protocol);
 
-	if (getaddrinfo_result != 0)
-	{
-		m_status = sock::Status::GETADDRINFO_ERROR;
-		return;
-	}
-
-	m_sock = socket(
-	    m_addrinfo->ai_family,
-	    m_addrinfo->ai_socktype,
-	    m_addrinfo->ai_protocol
-	);
+	m_hints = hints;
 
 	if (INVALID_SOCKET == m_sock)
 	{
@@ -80,48 +67,74 @@ sock::internal::WindowsSocket::WindowsSocket(const sock::CtorArgs args)
 
 sock::internal::WindowsSocket::~WindowsSocket()
 {
-	freeaddrinfo(m_addrinfo);
 	closesocket(m_sock);
 }
 
 sock::internal::WindowsSocket& sock::internal::WindowsSocket::option(
-	const sock::Option option,
-	const int value
+    sock::Option option,
+    int value
 )
 {
 	const auto str_value = std::to_string(value);
 	const auto char_value = str_value.c_str();
 
 	const auto result = setsockopt(
-		m_sock,
-		SOL_SOCKET,
-		get_option_name(option),
-		char_value,
-		sizeof(char_value)
+	    m_sock,
+	    SOL_SOCKET,
+	    get_option_name(option),
+	    char_value,
+	    sizeof(char_value)
 	);
 
-	return *this;
-}
-
-static auto _bind = bind;
-
-sock::internal::WindowsSocket& sock::internal::WindowsSocket::bind()
-{
-	// bind socket to ip address and port
-	const auto bind_result =
-	    _bind(m_sock, m_addrinfo->ai_addr, (int) m_addrinfo->ai_addrlen);
-
-	if (SOCKET_ERROR == bind_result)
+	if (result == SOCKET_ERROR)
 	{
-		m_status = sock::Status::BIND_ERROR;
+		m_status = sock::Status::OPTION_SET_ERROR;
 	}
 
 	return *this;
 }
 
-static auto _listen = listen;
+const auto _bind = bind;
 
-sock::internal::WindowsSocket& sock::internal::WindowsSocket::listen(size_t backlog)
+sock::internal::WindowsSocket& sock::internal::WindowsSocket::bind(
+    sock::Address address
+)
+{
+	addrinfo* info {nullptr};
+
+	// Resolve the local address and port to be used by the server
+	const auto getaddrinfo_result = getaddrinfo(
+	    address.host.length() > 0 ? address.host.data() : NULL,
+	    address.port.data(),
+	    &m_hints,
+	    &info
+	);
+
+	if (getaddrinfo_result != 0)
+	{
+		m_status = sock::Status::GETADDRINFO_ERROR;
+	}
+	else
+	{
+		// bind socket to ip address and port
+		const auto bind_result = _bind(m_sock, info->ai_addr, info->ai_addrlen);
+
+		if (SOCKET_ERROR == bind_result)
+		{
+			m_status = sock::Status::BIND_ERROR;
+		}
+	}
+
+	freeaddrinfo(info);
+
+	return *this;
+}
+
+const auto _listen = listen;
+
+sock::internal::WindowsSocket& sock::internal::WindowsSocket::listen(
+    size_t backlog
+)
 {
 	if (_listen(m_sock, backlog) == SOCKET_ERROR)
 	{
@@ -131,43 +144,66 @@ sock::internal::WindowsSocket& sock::internal::WindowsSocket::listen(size_t back
 	return *this;
 }
 
-static auto _connect = connect;
+const auto _connect = connect;
 
-sock::internal::WindowsSocket& sock::internal::WindowsSocket::connect()
+sock::internal::WindowsSocket& sock::internal::WindowsSocket::connect(
+    sock::Address address
+)
 {
-	// Try to connect to ip until succeded or failed
-	for (auto ptr = m_addrinfo; ptr != NULL; ptr = ptr->ai_next)
-	{
-		if (INVALID_SOCKET == m_sock)
-		{
-			m_sock = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
-		}
+	addrinfo* info {nullptr};
 
-		if (_connect(m_sock, ptr->ai_addr, (int) ptr->ai_addrlen) ==
-		    SOCKET_ERROR)
+	// Resolve the local address and port to be used by the server
+	const auto getaddrinfo_result = getaddrinfo(
+	    address.host.length() > 0 ? address.host.data() : NULL,
+	    address.port.data(),
+	    &m_hints,
+	    &info
+	);
+
+	if (getaddrinfo_result != 0)
+	{
+		m_status = sock::Status::GETADDRINFO_ERROR;
+	}
+	else
+	{
+		// Try to connect to ip until succeded or failed
+		/* for (auto ptr = m_addrinfo; ptr != NULL; ptr = ptr->ai_next) */
+		for (auto ptr = info; ptr != NULL; ptr = ptr->ai_next)
 		{
-			m_status = sock::Status::CONNECT_ERROR;
-			closesocket(m_sock);
-			m_sock = INVALID_SOCKET;
-		}
-		else
-		{
-			m_status = sock::Status::GOOD;
-			break;
+			/* if (INVALID_SOCKET == m_sock) */
+			/* { */
+			/* 	m_sock = */
+			/* 	    socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol); */
+			/* } */
+
+			if (_connect(m_sock, ptr->ai_addr, (int) ptr->ai_addrlen)
+			    == SOCKET_ERROR)
+			{
+				m_status = sock::Status::CONNECT_ERROR;
+				/* closesocket(m_sock); */
+				/* m_sock = INVALID_SOCKET; */
+			}
+			else
+			{
+				m_status = sock::Status::GOOD;
+				break;
+			}
 		}
 	}
+
+	freeaddrinfo(info);
 
 	return *this;
 }
 
-static auto _accept = accept;
+const auto _accept = accept;
 
 sock::internal::WindowsSocket sock::internal::WindowsSocket::accept()
 {
 	return sock::internal::WindowsSocket {_accept(m_sock, NULL, NULL)};
 }
 
-static auto _receive = recv;
+const auto _receive = recv;
 
 void sock::internal::WindowsSocket::receive(sock::Buffer& buff, int flags)
 {
@@ -176,9 +212,11 @@ void sock::internal::WindowsSocket::receive(sock::Buffer& buff, int flags)
 	buff.received_size(n);
 }
 
-static auto _send = send;
+const auto _send = send;
 
-sock::internal::WindowsSocket& sock::internal::WindowsSocket::send(const std::string_view& str)
+sock::internal::WindowsSocket& sock::internal::WindowsSocket::send(
+    std::string_view str
+)
 {
 	auto send_result = _send(m_sock, str.data(), str.length(), 0);
 
@@ -190,7 +228,7 @@ sock::internal::WindowsSocket& sock::internal::WindowsSocket::send(const std::st
 	return *this;
 }
 
-static auto _shutdown = shutdown;
+const auto _shutdown = shutdown;
 
 void sock::internal::WindowsSocket::shutdown()
 {

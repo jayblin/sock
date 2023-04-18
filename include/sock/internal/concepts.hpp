@@ -9,25 +9,28 @@
 
 namespace sock::internal
 {
+	// clang-format off
 	template<class T>
 	concept has_socket_interface = requires(
 	    T t,
-	    const size_t max_connections,
+	    size_t max_connections,
 	    Buffer& buffer,
 	    int flags
 	)
 	{
-		{ T((const CtorArgs){}) };
-		{ t.option((const sock::Option){}, (const int){}) } -> std::same_as<T&>;
-		{ t.bind() } -> std::same_as<T&>;
+		{ T((CtorArgs){}) };
+		{ t.option((sock::Option){}, (int){}) } -> std::same_as<T&>;
+		{ t.bind((sock::Address){}) } -> std::same_as<T&>;
 		{ t.listen(max_connections) } -> std::same_as<T&>;
-		{ t.connect() } -> std::same_as<T&>;
+		{ t.connect((sock::Address){}) } -> std::same_as<T&>;
 		{ t.accept() } -> std::same_as<T>;
 		{ t.receive(buffer, flags) } -> std::same_as<void>;
-		{ t.send((const std::string_view){}) } -> std::same_as<T&>;
+		{ t.send((std::string_view){}) } -> std::same_as<T&>;
 		{ t.shutdown() } -> std::same_as<void>;
 	};
+	// clang-format on
 
+	// clang-format off
 	template<class T, class S>
 	concept has_status = requires(T const t)
 	{
@@ -37,7 +40,8 @@ namespace sock::internal
 
 	template<class T, class S>
 	concept is_socket = has_socket_interface<T> && has_status<T, S>;
+	// clang-format on
 
-} // namespace sock
+} // namespace sock::internal
 
 #endif // SOCKET_INTERNAL_CONCEPTS_H_
