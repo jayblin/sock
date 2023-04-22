@@ -1,7 +1,6 @@
 #ifndef SOCK_UTILS_H_
 #define SOCK_UTILS_H_
 
-#include <netdb.h>
 #include <string_view>
 
 #if defined(WIN32) || defined(_WIN32) \
@@ -12,6 +11,7 @@
 
 #else
 
+#include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -80,7 +80,7 @@ namespace sock
 		/* bypass normal routing */
 		DONTROUTE,
 		/* Socket error status. */
-		ERROR,
+		OPT_ERROR,
 		/* Connections are kept alive with periodic messages. */
 		KEEPALIVE,
 		/* Socket lingers on close. */

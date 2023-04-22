@@ -15,14 +15,14 @@ GTEST_TEST(Socket, server_and_client_communication_test)
 	    .protocol = sock::Protocol::TCP,
 	    .flags = sock::Flags::PASSIVE,
 	});
-	ASSERT_EQ(sock::Status::GOOD, server.status());
+	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
 	// SO_REUSEADDR must be set so tests can reuse socket ports.
 	server.option(sock::Option::REUSEADDR, 1);
-	ASSERT_EQ(sock::Status::GOOD, server.status());
+	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
 	server.bind({.host = "localhost", .port = "8843"});
-	ASSERT_EQ(sock::Status::GOOD, server.status());
+	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
 	std::thread server_thread {
 	    [&server, &server_closed]()
@@ -30,27 +30,27 @@ GTEST_TEST(Socket, server_and_client_communication_test)
 		    server.listen(1);
 
 		    auto connection = server.accept();
-		    ASSERT_EQ(sock::Status::GOOD, server.status());
-		    ASSERT_EQ(sock::Status::GOOD, connection.status());
+		    ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
+		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
 
 		    sock::Buffer buff;
 		    ASSERT_EQ(0, buff.received_size());
 
 		    connection.receive(buff);
-		    ASSERT_EQ(sock::Status::GOOD, connection.status());
+		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
 		    ASSERT_EQ(11, buff.received_size());
 		    ASSERT_STREQ("Hello there", buff.buffer());
 
 		    connection.send("General Kenobi!");
-		    ASSERT_EQ(sock::Status::GOOD, connection.status());
+		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
 
 		    connection.receive(buff);
-		    ASSERT_EQ(sock::Status::GOOD, connection.status());
+		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
 		    ASSERT_EQ(8, buff.received_size());
 		    ASSERT_STREQ("Bye now!", buff.buffer());
 
 		    connection.send("");
-		    ASSERT_EQ(sock::Status::GOOD, connection.status());
+		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
 
 		    server_closed = true;
 	    }};
@@ -72,23 +72,23 @@ GTEST_TEST(Socket, server_and_client_communication_test)
 	    [&client, &client_closed]()
 	    {
 		    client.connect({.host = "localhost", .port = "8843"});
-		    ASSERT_EQ(sock::Status::GOOD, client.status());
+		    ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
 
 		    client.send("Hello there");
-		    ASSERT_EQ(sock::Status::GOOD, client.status());
+		    ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
 
 		    sock::Buffer buff;
 
 		    client.receive(buff);
-		    ASSERT_EQ(sock::Status::GOOD, client.status());
+		    ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
 		    ASSERT_EQ(15, buff.received_size());
-		    ASSERT_STREQ("General Kenobi!", buff.buffer());
+		    ASSERT_STREQ("General Kenobi!", buff.buffer()) << sock::error();
 
 		    client.send("Bye now!");
-		    ASSERT_EQ(sock::Status::GOOD, client.status());
+		    ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
 
 		    client.receive(buff);
-		    ASSERT_EQ(sock::Status::GOOD, client.status());
+		    ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
 		    ASSERT_EQ(0, buff.received_size());
 
 		    client_closed = true;
@@ -126,14 +126,14 @@ GTEST_TEST(Socket, socket_can_handle_callbacks)
 	                      }
 	                  )
 	                  .create();
-	ASSERT_EQ(sock::Status::GOOD, server.status());
+	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
 	// SO_REUSEADDR must be set so tests can reuse socket ports.
 	server.option(sock::Option::REUSEADDR, 1);
-	ASSERT_EQ(sock::Status::GOOD, server.status());
+	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
 	server.bind({.host = "localhost", .port = "9843"});
-	ASSERT_EQ(sock::Status::GOOD, server.status());
+	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
 	std::thread server_thread {
 	    [&server, &server_closed, &sock_error, &sock_str]()
@@ -141,27 +141,27 @@ GTEST_TEST(Socket, socket_can_handle_callbacks)
 		    server.listen(1);
 
 		    auto connection = server.accept();
-		    ASSERT_EQ(sock::Status::GOOD, server.status());
-		    ASSERT_EQ(sock::Status::GOOD, connection.status());
+		    ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
+		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
 
 		    sock::Buffer buff;
 		    ASSERT_EQ(0, buff.received_size());
 
 		    connection.receive(buff);
-		    ASSERT_EQ(sock::Status::GOOD, connection.status());
+		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
 		    ASSERT_EQ(11, buff.received_size());
 		    ASSERT_STREQ("Hello there", buff.buffer());
 
 		    connection.send("General Kenobi!");
-		    ASSERT_EQ(sock::Status::GOOD, connection.status());
+		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
 
 		    connection.receive(buff);
-		    ASSERT_EQ(sock::Status::GOOD, connection.status());
+		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
 		    ASSERT_EQ(8, buff.received_size());
 		    ASSERT_STREQ("Bye now!", buff.buffer());
 
 		    connection.send("");
-		    ASSERT_EQ(sock::Status::GOOD, connection.status());
+		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
 
 		    ASSERT_LT(0, sock_str.length());
 		    ASSERT_STREQ("", sock_error.c_str());
@@ -185,33 +185,33 @@ GTEST_TEST(Socket, socket_can_handle_callbacks)
 	                      }
 	                  )
 	                  .create();
-	ASSERT_EQ(sock::Status::GOOD, client.status());
+	ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
 
 	// SO_REUSEADDR must be set so tests can reuse socket ports.
 	client.option(sock::Option::REUSEADDR, 1);
-	ASSERT_EQ(sock::Status::GOOD, client.status());
+	ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
 
 	std::thread client_thread {
 	    [&client, &client_closed]()
 	    {
 		    client.connect({"localhost", "9843"});
-		    ASSERT_EQ(sock::Status::GOOD, client.status());
+		    ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
 
 		    client.send("Hello there");
-		    ASSERT_EQ(sock::Status::GOOD, client.status());
+		    ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
 
 		    sock::Buffer buff;
 
 		    client.receive(buff);
-		    ASSERT_EQ(sock::Status::GOOD, client.status());
+		    ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
 		    ASSERT_EQ(15, buff.received_size());
 		    ASSERT_STREQ("General Kenobi!", buff.buffer());
 
 		    client.send("Bye now!");
-		    ASSERT_EQ(sock::Status::GOOD, client.status());
+		    ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
 
 		    client.receive(buff);
-		    ASSERT_EQ(sock::Status::GOOD, client.status());
+		    ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
 		    ASSERT_EQ(0, buff.received_size());
 
 		    client_closed = true;

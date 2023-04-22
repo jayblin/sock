@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <iostream>
 #include <string>
+#include <winsock2.h>
 
 static constexpr auto get_address_family(sock::Domain d)
 {
@@ -39,6 +40,37 @@ static constexpr auto get_option_name(sock::Option o)
 	{
 		case sock::Option::REUSEADDR:
 			return SO_REUSEADDR;
+		case sock::Option::ACCEPTCONN:
+			return SO_ACCEPTCONN;
+		case sock::Option::BROADCAST:
+			return SO_BROADCAST;
+		case sock::Option::DEBUG:
+			return SO_DEBUG;
+		case sock::Option::DONTROUTE:
+			return SO_DONTROUTE;
+		case sock::Option::OPT_ERROR:
+			return SO_ERROR;
+		case sock::Option::KEEPALIVE:
+			return SO_KEEPALIVE;
+		case sock::Option::LINGER:
+			return SO_LINGER;
+		case sock::Option::OOBINLINE:
+			return SO_OOBINLINE;
+		case sock::Option::RCVBUF:
+			return SO_RCVBUF;
+		case sock::Option::RCVLOWAT:
+			return SO_RCVLOWAT;
+		case sock::Option::RCVTIMEO:
+			return SO_RCVTIMEO;
+		case sock::Option::SNDBUF:
+			return SO_SNDBUF;
+		case sock::Option::SNDLOWAT:
+			return SO_SNDLOWAT;
+		case sock::Option::SNDTIMEO:
+			return SO_SNDTIMEO;
+		case sock::Option::TYPE:
+			return SO_TYPE;
+			break;
 	}
 }
 
@@ -116,12 +148,16 @@ sock::internal::WindowsSocket& sock::internal::WindowsSocket::bind(
 	}
 	else
 	{
-		// bind socket to ip address and port
-		const auto bind_result = _bind(m_sock, info->ai_addr, info->ai_addrlen);
-
-		if (SOCKET_ERROR == bind_result)
-		{
-			m_status = sock::Status::BIND_ERROR;
+		for (auto rp = info; rp != nullptr; rp = rp->ai_next) {
+			if (_bind(m_sock, rp->ai_addr, rp->ai_addrlen) == SOCKET_ERROR)
+			{
+				m_status = sock::Status::BIND_ERROR;
+			}
+			else
+			{
+				m_status = sock::Status::GOOD;
+				break;
+			}
 		}
 	}
 
@@ -167,21 +203,12 @@ sock::internal::WindowsSocket& sock::internal::WindowsSocket::connect(
 	else
 	{
 		// Try to connect to ip until succeded or failed
-		/* for (auto ptr = m_addrinfo; ptr != NULL; ptr = ptr->ai_next) */
-		for (auto ptr = info; ptr != NULL; ptr = ptr->ai_next)
+		for (auto ptr = info; ptr != nullptr; ptr = ptr->ai_next)
 		{
-			/* if (INVALID_SOCKET == m_sock) */
-			/* { */
-			/* 	m_sock = */
-			/* 	    socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol); */
-			/* } */
-
 			if (_connect(m_sock, ptr->ai_addr, (int) ptr->ai_addrlen)
 			    == SOCKET_ERROR)
 			{
 				m_status = sock::Status::CONNECT_ERROR;
-				/* closesocket(m_sock); */
-				/* m_sock = INVALID_SOCKET; */
 			}
 			else
 			{
