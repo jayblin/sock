@@ -50,7 +50,7 @@ static constexpr int get_option_name(sock::Option o)
 			return SO_DEBUG;
 		case sock::Option::DONTROUTE:
 			return SO_DONTROUTE;
-		case sock::Option::ERROR:
+		case sock::Option::OPT_ERROR:
 			return SO_ERROR;
 		case sock::Option::KEEPALIVE:
 			return SO_KEEPALIVE;
