@@ -1,6 +1,7 @@
 #ifndef SOCK_UTILS_H_
 #define SOCK_UTILS_H_
 
+#include <netdb.h>
 #include <string_view>
 
 #if defined(WIN32) || defined(_WIN32) \
@@ -56,7 +57,7 @@ namespace sock
     || defined(__WIN32) && !defined(__CYGWIN__)
 		PASSIVE = AI_PASSIVE,
 #else
-		PASSIVE = 0,
+		PASSIVE = AI_PASSIVE,
 #endif
 	};
 
@@ -64,12 +65,42 @@ namespace sock
 	 * @see
 	 * https://learn.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-setsockopt
 	 * @see https://man7.org/linux/man-pages/man7/socket.7.html
-	 *
-	 * @TODO: Add all options maybe?
+	 * @see https://pubs.opengroup.org/onlinepubs/7908799/xns/syssocket.h.html
 	 */
 	enum class Option
 	{
+		/* Reuse of local addresses is supported. */
 		REUSEADDR,
+		/* Socket is accepting connections. */
+		ACCEPTCONN,
+		/* Transmission of broadcast messages is supported. */
+		BROADCAST,
+		/* Debugging information is being recorded. */
+		DEBUG,
+		/* bypass normal routing */
+		DONTROUTE,
+		/* Socket error status. */
+		ERROR,
+		/* Connections are kept alive with periodic messages. */
+		KEEPALIVE,
+		/* Socket lingers on close. */
+		LINGER,
+		/* Out-of-band data is transmitted in line. */
+		OOBINLINE,
+		/* Receive buffer size. */
+		RCVBUF,
+		/* Receive "low water mark" */
+		RCVLOWAT,
+		/* Receive timeout */
+		RCVTIMEO,
+		/* Send buffer size. */
+		SNDBUF,
+		/* Send "low water mark" */
+		SNDLOWAT,
+		/* Send timeout */
+		SNDTIMEO,
+		/* Socket type.*/
+		TYPE
 	};
 
 	struct CtorArgs

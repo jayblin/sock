@@ -1,11 +1,13 @@
 #include "sock/internal/unix_socket.hpp"
 #include "sock/utils.hpp"
 #include <algorithm>
+#include <asm-generic/socket.h>
 #include <iostream>
+#include <netdb.h>
 #include <string>
 #include <utility>
 
-static constexpr auto get_address_family(const sock::Domain d)
+static constexpr int get_address_family(sock::Domain d)
 {
 	switch (d)
 	{
@@ -16,7 +18,7 @@ static constexpr auto get_address_family(const sock::Domain d)
 	}
 }
 
-static constexpr auto get_socket_type(const sock::Type t)
+static constexpr int get_socket_type(sock::Type t)
 {
 	switch (t)
 	{
@@ -25,7 +27,7 @@ static constexpr auto get_socket_type(const sock::Type t)
 	}
 }
 
-static constexpr auto get_protocol(const sock::Protocol p)
+static constexpr int get_protocol(sock::Protocol p)
 {
 	switch (p)
 	{
@@ -34,34 +36,64 @@ static constexpr auto get_protocol(const sock::Protocol p)
 	}
 }
 
-static constexpr auto get_option_name(const sock::Option o)
+static constexpr int get_option_name(sock::Option o)
 {
 	switch (o)
 	{
 		case sock::Option::REUSEADDR:
 			return SO_REUSEADDR;
+		case sock::Option::ACCEPTCONN:
+			return SO_ACCEPTCONN;
+		case sock::Option::BROADCAST:
+			return SO_BROADCAST;
+		case sock::Option::DEBUG:
+			return SO_DEBUG;
+		case sock::Option::DONTROUTE:
+			return SO_DONTROUTE;
+		case sock::Option::ERROR:
+			return SO_ERROR;
+		case sock::Option::KEEPALIVE:
+			return SO_KEEPALIVE;
+		case sock::Option::LINGER:
+			return SO_LINGER;
+		case sock::Option::OOBINLINE:
+			return SO_OOBINLINE;
+		case sock::Option::RCVBUF:
+			return SO_RCVBUF;
+		case sock::Option::RCVLOWAT:
+			return SO_RCVLOWAT;
+		case sock::Option::RCVTIMEO:
+			return SO_RCVTIMEO;
+		case sock::Option::SNDBUF:
+			return SO_SNDBUF;
+		case sock::Option::SNDLOWAT:
+			return SO_SNDLOWAT;
+		case sock::Option::SNDTIMEO:
+			return SO_SNDTIMEO;
+		case sock::Option::TYPE:
+			return SO_TYPE;
 	}
 }
 
+static const auto _socket = socket;
+
 sock::internal::UnixSocket::UnixSocket(const sock::CtorArgs args)
 {
-	m_fd = socket(
-		get_address_family(args.domain),
-		get_socket_type(args.type),
-		get_protocol(args.protocol)
+	m_domain = get_address_family(args.domain);
+	m_socket_type = get_socket_type(args.type);
+	m_protocol = get_protocol(args.protocol);
+	m_flags = args.flags;
+
+	m_fd = _socket(
+		m_domain,
+		m_socket_type,
+		m_protocol
 	);
 
 	if (m_fd < 0)
 	{
 		m_status = sock::Status::SOCKET_CREATE_ERROR;
 	}
-
-	m_addr.sin_family = get_address_family(args.domain);
-	// @TODO: Should this be in `args`?
-	m_addr.sin_addr.s_addr = INADDR_ANY;
-	m_addr.sin_port = htons(std::stoi(args.port.data()));
-
-	/* m_args = std::move(args); */
 }
 
 sock::internal::UnixSocket::~UnixSocket()
@@ -73,11 +105,13 @@ sock::internal::UnixSocket::~UnixSocket()
 	}
 }
 
-sock::internal::UnixSocket& sock::internal::UnixSocket::option(const sock::Option opt, const int val)
+sock::internal::UnixSocket& sock::internal::UnixSocket::option(
+	sock::Option opt,
+	int val
+)
 {
 	const auto result = setsockopt(
 		m_fd,
-		/* get_protocol(m_args.protocol), */
 		SOL_SOCKET,
 		get_option_name(opt),
 		&val,
@@ -92,26 +126,46 @@ sock::internal::UnixSocket& sock::internal::UnixSocket::option(const sock::Optio
 	return *this;
 }
 
-static auto _bind = bind;
+static const auto _bind = bind;
 
-sock::internal::UnixSocket& sock::internal::UnixSocket::bind()
+sock::internal::UnixSocket& sock::internal::UnixSocket::bind(sock::Address address)
 {
-	// bind socket to ip address and port
-	const auto bind_result = _bind(
-		m_fd,
-		reinterpret_cast<sockaddr*>(&m_addr),
-		sizeof(m_addr)
-	);
+	addrinfo hints;
 
-	if (bind_result < 0)
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = m_domain;
+	hints.ai_socktype = m_socket_type;
+	hints.ai_flags = m_flags;
+	hints.ai_protocol = m_protocol;
+	hints.ai_canonname = nullptr;
+	hints.ai_addr = nullptr;
+	hints.ai_next = nullptr;
+
+	addrinfo* addr;
+	const auto s = getaddrinfo(address.host.empty() ? nullptr : address.host.data(), address.port.data(), &hints, &addr);
+
+	if (s != 0) {
+		m_status = sock::Status::GETADDRINFO_ERROR;
+	}
+	else
 	{
-		m_status = sock::Status::BIND_ERROR;
+		for (auto rp = addr; rp != nullptr; rp = rp->ai_next) {
+			if (_bind(m_fd, rp->ai_addr, rp->ai_addrlen) < 0)
+			{
+				m_status = sock::Status::BIND_ERROR;
+			}
+			else
+			{
+				m_status = sock::Status::GOOD;
+				break;
+			}
+		}
 	}
 
 	return *this;
 }
 
-static auto _listen = listen;
+static const auto _listen = listen;
 
 sock::internal::UnixSocket& sock::internal::UnixSocket::listen(size_t max_connections)
 {
@@ -123,38 +177,61 @@ sock::internal::UnixSocket& sock::internal::UnixSocket::listen(size_t max_connec
 	return *this;
 }
 
-static auto _connect = connect;
+static const auto _connect = connect;
 
-sock::internal::UnixSocket& sock::internal::UnixSocket::connect()
+sock::internal::UnixSocket& sock::internal::UnixSocket::connect(sock::Address address)
 {
-	const auto result = _connect(
-		m_fd,
-		reinterpret_cast<sockaddr*>(&m_addr),
-		sizeof(m_addr)
-	);
+	addrinfo hints;
 
-	if (result < 0)
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = m_domain;
+	hints.ai_socktype = m_socket_type;
+	hints.ai_flags = m_flags;
+	hints.ai_protocol = m_protocol;
+	hints.ai_canonname = nullptr;
+	hints.ai_addr = nullptr;
+	hints.ai_next = nullptr;
+
+	addrinfo* addr;
+	const auto s = getaddrinfo(address.host.empty() ? nullptr : address.host.data(), address.port.data(), &hints, &addr);
+
+	if (s != 0) {
+		m_status = sock::Status::GETADDRINFO_ERROR;
+	}
+	else
 	{
-		m_status = sock::Status::CONNECT_ERROR;
+		for (auto rp = addr; rp != nullptr; rp = rp->ai_next) {
+
+			if (_connect(m_fd, rp->ai_addr, rp->ai_addrlen) < 0)
+			{
+				m_status = sock::Status::CONNECT_ERROR;
+			}
+			else
+			{
+				m_status = sock::Status::GOOD;
+				break;
+			}
+		}
 	}
 
 	return *this;
 }
 
-static auto _accept = accept;
+static const auto _accept = accept;
 
 sock::internal::UnixSocket sock::internal::UnixSocket::accept()
 {
-	m_client_len = sizeof(m_client_addr);
+	sockaddr_storage peer_addr;
+	socklen_t peer_addr_len = sizeof(peer_addr);
 
 	return sock::internal::UnixSocket {_accept(
 		m_fd,
-		reinterpret_cast<sockaddr*>(&m_client_addr),
-		&m_client_len
+		reinterpret_cast<sockaddr*>(&peer_addr),
+		&peer_addr_len
 	)};
 }
 
-static auto _receive = recv;
+static const auto _receive = recv;
 
 void sock::internal::UnixSocket::receive(sock::Buffer& buff, int flags)
 {
@@ -163,9 +240,9 @@ void sock::internal::UnixSocket::receive(sock::Buffer& buff, int flags)
 	buff.received_size(n);
 }
 
-static auto _send = send;
+static const auto _send = send;
 
-sock::internal::UnixSocket& sock::internal::UnixSocket::send(const std::string_view& str)
+sock::internal::UnixSocket& sock::internal::UnixSocket::send(std::string_view str)
 {
 	auto send_result = _send(m_fd, str.data(), str.length(), 0);
 
@@ -177,7 +254,7 @@ sock::internal::UnixSocket& sock::internal::UnixSocket::send(const std::string_v
 	return *this;
 }
 
-static auto _shutdown = shutdown;
+static const auto _shutdown = shutdown;
 
 void sock::internal::UnixSocket::shutdown()
 {

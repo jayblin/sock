@@ -110,7 +110,7 @@ GTEST_TEST(Socket, socket_can_handle_callbacks)
 	auto& factory = sock::SocketFactory::instance();
 	auto server = factory
 	                  .wrap({
-	                      .domain = sock::Domain::INET,
+	                      .domain = sock::Domain::UNSPEC,
 	                      .type = sock::Type::STREAM,
 	                      .protocol = sock::Protocol::TCP,
 	                  })
@@ -173,7 +173,7 @@ GTEST_TEST(Socket, socket_can_handle_callbacks)
 
 	auto client = factory
 	                  .wrap({
-	                      .domain = sock::Domain::INET,
+	                      .domain = sock::Domain::UNSPEC,
 	                      .type = sock::Type::STREAM,
 	                      .protocol = sock::Protocol::TCP,
 	                  })
@@ -221,33 +221,4 @@ GTEST_TEST(Socket, socket_can_handle_callbacks)
 
 	ASSERT_TRUE(server_closed);
 	ASSERT_TRUE(client_closed);
-}
-
-GTEST_TEST(Socket, can_be_bound_to_arbitrary_address)
-{
-	auto sock = sock::SocketFactory::instance()
-	                .wrap({
-	                    .domain = sock::Domain::INET,
-	                    .type = sock::Type::STREAM,
-	                    .protocol = sock::Protocol::TCP,
-	                })
-	                .with(
-	                    [](auto& s)
-	                    {
-		                    std::cout << sock::str_status(s.status()) << '\n';
-		                    std::cout << sock::error() << '\n';
-	                    }
-	                )
-	                .create();
-
-	sock.bind({"114.42.0.7", "8430"})
-	    .option(sock::Option::REUSEADDR, 1)
-	    .connect({.host = "www.google.com", .port = "80"})
-	    .send("GET / HTTP/1.1\n"
-	          "\n");
-
-	sock::Buffer buff;
-	sock.receive(buff);
-
-	std::cout << buff.buffer() << '\n';
 }

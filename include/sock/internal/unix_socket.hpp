@@ -12,7 +12,7 @@ namespace sock::internal
 	public:
 		UnixSocket();
 		UnixSocket(int fd) : m_fd {fd} {};
-		UnixSocket(const CtorArgs);
+		UnixSocket(CtorArgs);
 		UnixSocket(const UnixSocket&) = delete;
 		UnixSocket(UnixSocket&& other)
 		{
@@ -30,22 +30,18 @@ namespace sock::internal
 			{
 				m_status = other.m_status;
 				m_fd = other.m_fd;
-				m_addr = other.m_addr;
-				m_client_addr = other.m_addr;
-				m_client_len = other.m_client_len;
-				/* m_args = std::move(other.m_args); */
 			}
 
 			return *this;
 		}
 
-		auto option(const sock::Option, const int) -> UnixSocket&;
-		auto bind() -> UnixSocket&;
-		auto listen(const size_t backlog) -> UnixSocket&;
-		auto connect() -> UnixSocket&;
+		auto option(sock::Option, int) -> UnixSocket&;
+		auto bind(sock::Address) -> UnixSocket&;
+		auto listen(size_t backlog) -> UnixSocket&;
+		auto connect(sock::Address) -> UnixSocket&;
 		auto accept() -> UnixSocket;
 		auto receive(sock::Buffer&, int flags = 0) -> void;
-		auto send(const std::string_view&) -> UnixSocket&;
+		auto send(std::string_view) -> UnixSocket&;
 		auto shutdown() -> void;
 
 		constexpr auto is_valid() const -> bool { return m_status != Status::GOOD; }
@@ -55,10 +51,10 @@ namespace sock::internal
 		Status m_status {Status::GOOD};
 
 		int m_fd;
-		sockaddr_in m_addr;
-		sockaddr_in m_client_addr;
-		socklen_t m_client_len;
-		/* sock::CtorArgs m_args; */
+		int m_domain;
+		int m_socket_type;
+		int m_protocol;
+		int m_flags;
 	};
 } // namespace sock
 
