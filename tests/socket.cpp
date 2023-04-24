@@ -40,6 +40,7 @@ GTEST_TEST(Socket, server_and_client_communication_test)
 		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
 		    ASSERT_EQ(11, buff.received_size());
 		    ASSERT_STREQ("Hello there", buff.buffer());
+		    ASSERT_STREQ("Hello there", buff.view().data());
 
 		    connection.send("General Kenobi!");
 		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
@@ -48,6 +49,7 @@ GTEST_TEST(Socket, server_and_client_communication_test)
 		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
 		    ASSERT_EQ(8, buff.received_size());
 		    ASSERT_STREQ("Bye now!", buff.buffer());
+		    ASSERT_STREQ("Bye now!", buff.view().data());
 
 		    connection.send("");
 		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
@@ -82,7 +84,8 @@ GTEST_TEST(Socket, server_and_client_communication_test)
 		    client.receive(buff);
 		    ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
 		    ASSERT_EQ(15, buff.received_size());
-		    ASSERT_STREQ("General Kenobi!", buff.buffer()) << sock::error();
+		    ASSERT_STREQ("General Kenobi!", buff.buffer());
+		    ASSERT_STREQ("General Kenobi!", buff.view().data());
 
 		    client.send("Bye now!");
 		    ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
@@ -96,8 +99,8 @@ GTEST_TEST(Socket, server_and_client_communication_test)
 
 	client_thread.join();
 
-	ASSERT_TRUE(server_closed);
-	ASSERT_TRUE(client_closed);
+	ASSERT_EQ(true, server_closed);
+	ASSERT_EQ(true, client_closed);
 }
 
 GTEST_TEST(Socket, socket_can_handle_callbacks)
@@ -151,6 +154,7 @@ GTEST_TEST(Socket, socket_can_handle_callbacks)
 		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
 		    ASSERT_EQ(11, buff.received_size());
 		    ASSERT_STREQ("Hello there", buff.buffer());
+		    ASSERT_STREQ("Hello there", buff.view().data());
 
 		    connection.send("General Kenobi!");
 		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
@@ -159,6 +163,7 @@ GTEST_TEST(Socket, socket_can_handle_callbacks)
 		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
 		    ASSERT_EQ(8, buff.received_size());
 		    ASSERT_STREQ("Bye now!", buff.buffer());
+		    ASSERT_STREQ("Bye now!", buff.view().data());
 
 		    connection.send("");
 		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
@@ -206,6 +211,7 @@ GTEST_TEST(Socket, socket_can_handle_callbacks)
 		    ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
 		    ASSERT_EQ(15, buff.received_size());
 		    ASSERT_STREQ("General Kenobi!", buff.buffer());
+		    ASSERT_STREQ("General Kenobi!", buff.view().data());
 
 		    client.send("Bye now!");
 		    ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
@@ -219,6 +225,6 @@ GTEST_TEST(Socket, socket_can_handle_callbacks)
 
 	client_thread.join();
 
-	ASSERT_TRUE(server_closed);
-	ASSERT_TRUE(client_closed);
+	ASSERT_EQ(true, server_closed);
+	ASSERT_EQ(true, client_closed);
 }

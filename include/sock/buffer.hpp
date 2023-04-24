@@ -3,6 +3,7 @@
 
 #include "sock/cmake_vars.h"
 #include <cstring>
+#include <string_view>
 
 namespace sock
 {
@@ -38,6 +39,11 @@ namespace sock
 			return m_buff;
 		}
 
+		auto view() const -> std::string_view
+		{
+			return std::string_view{m_buff, m_received_size};
+		}
+
 		/**
 		 * Returns the maximum allowed size of inner `const char*`.
 		 */
@@ -51,7 +57,7 @@ namespace sock
 		 * inner `char*`.
 		 * Should be set by `sock::Socket::receive()`.
 		 */
-		constexpr auto received_size() const
+		auto received_size() const -> size_t
 		{
 			return m_received_size;
 		}
@@ -70,7 +76,7 @@ namespace sock
 
 	private:
 		char m_buff[MAX];
-		int m_received_size = 0;
+		size_t m_received_size = 0;
 	};
 } // namespace sock
 

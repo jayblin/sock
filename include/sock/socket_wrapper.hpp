@@ -7,7 +7,7 @@
 #include <string_view>
 #include <utility>
 
-namespace sock::internal
+namespace sock
 {
 	/**
 	 * Same as `sock::Socket` but after each member function call a callback

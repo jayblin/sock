@@ -2,7 +2,7 @@
 #define SOCK_SOCKET_FACTORY_H_
 
 #include "sock/internal/concepts.hpp"
-#include "sock/internal/socket_wrapper.hpp"
+#include "sock/socket_wrapper.hpp"
 #include "sock/socket.hpp"
 #include "sock/utils.hpp"
 #include <functional>
@@ -31,13 +31,13 @@ namespace sock
 		/**
 		 * Creates a socket.
 		 */
-		auto create() -> sock::internal::SocketWrapper
+		auto create() -> sock::SocketWrapper
 		{
 			static_assert(
-				sock::internal::is_socket<sock::internal::SocketWrapper, sock::Status>
+				sock::internal::is_socket<sock::SocketWrapper, sock::Status>
 			);
 
-			return sock::internal::SocketWrapper(
+			return sock::SocketWrapper(
 				std::move(m_args),
 				std::move(m_callback)
 			);
