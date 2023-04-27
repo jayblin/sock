@@ -18,11 +18,11 @@ GTEST_TEST(Socket, server_and_client_communication_test)
 	});
 	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
-	// SO_REUSEADDR must be set so tests can reuse socket ports.
-	server.option(sock::Option::REUSEADDR, 1);
+	server.bind({.host = "localhost", .port = "8843"});
 	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
-	server.bind({.host = "localhost", .port = "8843"});
+	// SO_REUSEADDR must be set so tests can reuse socket ports.
+	server.option(sock::Option::REUSEADDR, 1);
 	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
 	std::thread server_thread {
@@ -32,28 +32,33 @@ GTEST_TEST(Socket, server_and_client_communication_test)
 
 		    auto connection = server.accept();
 		    ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
-		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
+		    ASSERT_EQ(sock::Status::GOOD, connection.status())
+		        << sock::error();
 
 		    sock::Buffer buff;
 		    ASSERT_EQ(0, buff.received_size());
 
 		    connection.receive(buff);
-		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
+		    ASSERT_EQ(sock::Status::GOOD, connection.status())
+		        << sock::error();
 		    ASSERT_EQ(11, buff.received_size());
 		    ASSERT_STREQ("Hello there", buff.buffer());
 		    ASSERT_STREQ("Hello there", buff.view().data());
 
 		    connection.send("General Kenobi!");
-		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
+		    ASSERT_EQ(sock::Status::GOOD, connection.status())
+		        << sock::error();
 
 		    connection.receive(buff);
-		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
+		    ASSERT_EQ(sock::Status::GOOD, connection.status())
+		        << sock::error();
 		    ASSERT_EQ(8, buff.received_size());
 		    ASSERT_STREQ("Bye now!", buff.buffer());
 		    ASSERT_STREQ("Bye now!", buff.view().data());
 
 		    connection.send("");
-		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
+		    ASSERT_EQ(sock::Status::GOOD, connection.status())
+		        << sock::error();
 
 		    server_closed = true;
 	    }};
@@ -132,11 +137,11 @@ GTEST_TEST(Socket, socket_can_handle_callbacks)
 	                  .create();
 	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
-	// SO_REUSEADDR must be set so tests can reuse socket ports.
-	server.option(sock::Option::REUSEADDR, 1);
+	server.bind({.host = "localhost", .port = "9843"});
 	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
-	server.bind({.host = "localhost", .port = "9843"});
+	// SO_REUSEADDR must be set so tests can reuse socket ports.
+	server.option(sock::Option::REUSEADDR, 1);
 	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
 	std::thread server_thread {
@@ -146,28 +151,33 @@ GTEST_TEST(Socket, socket_can_handle_callbacks)
 
 		    auto connection = server.accept();
 		    ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
-		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
+		    ASSERT_EQ(sock::Status::GOOD, connection.status())
+		        << sock::error();
 
 		    sock::Buffer buff;
 		    ASSERT_EQ(0, buff.received_size());
 
 		    connection.receive(buff);
-		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
+		    ASSERT_EQ(sock::Status::GOOD, connection.status())
+		        << sock::error();
 		    ASSERT_EQ(11, buff.received_size());
 		    ASSERT_STREQ("Hello there", buff.buffer());
 		    ASSERT_STREQ("Hello there", buff.view().data());
 
 		    connection.send("General Kenobi!");
-		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
+		    ASSERT_EQ(sock::Status::GOOD, connection.status())
+		        << sock::error();
 
 		    connection.receive(buff);
-		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
+		    ASSERT_EQ(sock::Status::GOOD, connection.status())
+		        << sock::error();
 		    ASSERT_EQ(8, buff.received_size());
 		    ASSERT_STREQ("Bye now!", buff.buffer());
 		    ASSERT_STREQ("Bye now!", buff.view().data());
 
 		    connection.send("");
-		    ASSERT_EQ(sock::Status::GOOD, connection.status()) << sock::error();
+		    ASSERT_EQ(sock::Status::GOOD, connection.status())
+		        << sock::error();
 
 		    ASSERT_LT(0, sock_str.length());
 		    ASSERT_STREQ("", sock_error.c_str());

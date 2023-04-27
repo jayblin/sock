@@ -161,7 +161,8 @@ sock::internal::WindowsSocket&
 	}
 	else
 	{
-		for (auto rp = info; rp != nullptr; rp = rp->ai_next) {
+		for (auto rp = info; rp != nullptr; rp = rp->ai_next)
+		{
 			if (_bind(m_sock, rp->ai_addr, rp->ai_addrlen) == SOCKET_ERROR)
 			{
 				m_status = sock::Status::BIND_ERROR;
@@ -181,9 +182,8 @@ sock::internal::WindowsSocket&
 
 const auto _listen = listen;
 
-sock::internal::WindowsSocket& sock::internal::WindowsSocket::listen(
-    size_t backlog
-)
+sock::internal::WindowsSocket&
+    sock::internal::WindowsSocket::listen(size_t backlog)
 {
 	if (_listen(m_sock, backlog) == SOCKET_ERROR)
 	{
@@ -195,9 +195,8 @@ sock::internal::WindowsSocket& sock::internal::WindowsSocket::listen(
 
 const auto _connect = connect;
 
-sock::internal::WindowsSocket& sock::internal::WindowsSocket::connect(
-    sock::Address address
-)
+sock::internal::WindowsSocket&
+    sock::internal::WindowsSocket::connect(sock::Address address)
 {
 	addrinfo* info {nullptr};
 
@@ -263,9 +262,8 @@ void sock::internal::WindowsSocket::receive(sock::Buffer& buff, int flags)
 
 const auto _send = send;
 
-sock::internal::WindowsSocket& sock::internal::WindowsSocket::send(
-    std::string_view str
-)
+sock::internal::WindowsSocket&
+    sock::internal::WindowsSocket::send(std::string_view str)
 {
 	auto send_result = _send(m_sock, str.data(), str.length(), 0);
 
