@@ -2,6 +2,7 @@
 #include "sock/utils.hpp"
 #include <algorithm>
 #include <asm-generic/socket.h>
+#include <bits/types/struct_timeval.h>
 #include <iostream>
 #include <netdb.h>
 #include <string>
@@ -126,6 +127,34 @@ sock::internal::UnixSocket& sock::internal::UnixSocket::option(
 	return *this;
 }
 
+sock::internal::UnixSocket& sock::internal::UnixSocket::option(
+	sock::Option opt,
+	std::chrono::milliseconds timeout
+)
+{
+	timeval to {
+		.tv_sec = static_cast<long>(timeout.count() / 1000),
+		.tv_usec = static_cast<long>(
+			timeout.count() - static_cast<long>(timeout.count() / 1000)*1000
+		)
+	};
+
+	const auto result = setsockopt(
+		m_fd,
+		SOL_SOCKET,
+		get_option_name(opt),
+		&to,
+		sizeof(to)
+	);
+
+	if (result < 0)
+	{
+		m_status = sock::Status::OPTION_SET_ERROR;
+	}
+
+	return *this;
+}
+
 static const auto _bind = bind;
 
 sock::internal::UnixSocket& sock::internal::UnixSocket::bind(sock::Address address)
@@ -237,7 +266,16 @@ void sock::internal::UnixSocket::receive(sock::Buffer& buff, int flags)
 {
 	buff.reset();
 	auto n = _receive(m_fd, buff.buffer(), buff.max_size() - 1, flags);
-	buff.received_size(n);
+
+	if (n < 0)
+	{
+		m_status = sock::Status::RECEIVE_ERROR;
+		buff.received_size(0);
+	}
+	else
+	{
+		buff.received_size(n);
+	}
 }
 
 static const auto _send = send;

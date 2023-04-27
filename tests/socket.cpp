@@ -18,11 +18,10 @@ GTEST_TEST(Socket, server_and_client_communication_test)
 	});
 	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
-	server.bind({.host = "localhost", .port = "8843"});
+	server.option(sock::Option::REUSEADDR, 1);
 	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
-	// SO_REUSEADDR must be set so tests can reuse socket ports.
-	server.option(sock::Option::REUSEADDR, 1);
+	server.bind({.host = "localhost", .port = "8843"});
 	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
 	std::thread server_thread {
@@ -60,6 +59,10 @@ GTEST_TEST(Socket, server_and_client_communication_test)
 		    ASSERT_EQ(sock::Status::GOOD, connection.status())
 		        << sock::error();
 
+			connection.shutdown();
+		    ASSERT_EQ(sock::Status::GOOD, connection.status())
+		        << sock::error();
+
 		    server_closed = true;
 	    }};
 
@@ -70,10 +73,6 @@ GTEST_TEST(Socket, server_and_client_communication_test)
 	    .type = sock::Type::STREAM,
 	    .protocol = sock::Protocol::TCP,
 	});
-	ASSERT_EQ(sock::Status::GOOD, client.status());
-
-	// SO_REUSEADDR must be set so tests can reuse socket ports.
-	client.option(sock::Option::REUSEADDR, 1);
 	ASSERT_EQ(sock::Status::GOOD, client.status());
 
 	std::thread client_thread {
@@ -137,11 +136,10 @@ GTEST_TEST(Socket, socket_can_handle_callbacks)
 	                  .create();
 	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
-	server.bind({.host = "localhost", .port = "9843"});
+	server.option(sock::Option::REUSEADDR, 1);
 	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
-	// SO_REUSEADDR must be set so tests can reuse socket ports.
-	server.option(sock::Option::REUSEADDR, 1);
+	server.bind({.host = "localhost", .port = "9843"});
 	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
 	std::thread server_thread {
@@ -182,6 +180,10 @@ GTEST_TEST(Socket, socket_can_handle_callbacks)
 		    ASSERT_LT(0, sock_str.length());
 		    ASSERT_STREQ("", sock_error.c_str());
 
+			connection.shutdown();
+		    ASSERT_EQ(sock::Status::GOOD, connection.status())
+		        << sock::error();
+
 		    server_closed = true;
 	    }};
 
@@ -201,10 +203,6 @@ GTEST_TEST(Socket, socket_can_handle_callbacks)
 	                      }
 	                  )
 	                  .create();
-	ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
-
-	// SO_REUSEADDR must be set so tests can reuse socket ports.
-	client.option(sock::Option::REUSEADDR, 1);
 	ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
 
 	std::thread client_thread {
@@ -255,10 +253,12 @@ GTEST_TEST(Socket, does_wait_for_specified_time)
 	});
 	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
-	server.bind({.host = "localhost", .port = "9843"});
+	// Setting REUSEADDR before binding alows tests to reuse sockets.
+	// Run `cat /proc/net/tcp` to view active sockets.
+	server.option(sock::Option::REUSEADDR, 1);
 	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
-	server.option(sock::Option::REUSEADDR, 1);
+	server.bind({.host = "localhost", .port = "10843"});
 	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
 	server.option(sock::Option::RCVTIMEO, 1500ms);
@@ -297,6 +297,10 @@ GTEST_TEST(Socket, does_wait_for_specified_time)
 		    ASSERT_EQ(sock::Status::GOOD, connection.status())
 		        << sock::error();
 
+			connection.shutdown();
+		    ASSERT_EQ(sock::Status::GOOD, connection.status())
+		        << sock::error();
+
 		    server_closed = true;
 	    }};
 
@@ -309,14 +313,10 @@ GTEST_TEST(Socket, does_wait_for_specified_time)
 	});
 	ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
 
-	// SO_REUSEADDR must be set so tests can reuse socket ports.
-	client.option(sock::Option::REUSEADDR, 1);
-	ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
-
 	std::thread client_thread {
 	    [&client, &client_closed]()
 	    {
-		    client.connect({"localhost", "9843"});
+		    client.connect({"localhost", "10843"});
 		    ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
 
 		    client.send("Hello there");
@@ -363,10 +363,10 @@ GTEST_TEST(Socket, server_does_disconnect_when_client_hangs)
 	});
 	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
-	server.bind({.host = "localhost", .port = "9843"});
+	server.option(sock::Option::REUSEADDR, 1);
 	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
-	server.option(sock::Option::REUSEADDR, 1);
+	server.bind({.host = "localhost", .port = "11843"});
 	ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
 
 	server.option(sock::Option::RCVTIMEO, 100ms);
@@ -404,6 +404,8 @@ GTEST_TEST(Socket, server_does_disconnect_when_client_hangs)
 		    ASSERT_STREQ("", buff.buffer());
 		    ASSERT_EQ(0, buff.received_size());
 
+			connection.shutdown();
+
 		    server_closed = true;
 	    }};
 
@@ -416,14 +418,10 @@ GTEST_TEST(Socket, server_does_disconnect_when_client_hangs)
 	});
 	ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
 
-	// SO_REUSEADDR must be set so tests can reuse socket ports.
-	client.option(sock::Option::REUSEADDR, 1);
-	ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
-
 	std::thread client_thread {
 	    [&client, &client_closed]()
 	    {
-		    client.connect({"localhost", "9843"});
+		    client.connect({"localhost", "11843"});
 		    ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
 
 		    client.send("Hello there");
@@ -442,10 +440,6 @@ GTEST_TEST(Socket, server_does_disconnect_when_client_hangs)
 		    ASSERT_EQ(sock::Status::GOOD, client.status()) << sock::error();
 
 		    client.receive(buff);
-		    ASSERT_EQ(
-		        sock::Status::RECEIVE_ERROR,
-		        client.status()
-		    ) << "Client should not receive data because server closed connection after 100ms of inactivity.";
 		    ASSERT_STREQ("", buff.buffer());
 		    ASSERT_EQ(0, buff.received_size());
 

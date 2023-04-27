@@ -3,6 +3,7 @@
 
 #include "sock/buffer.hpp"
 #include "sock/utils.hpp"
+#include <chrono>
 #include <functional>
 
 namespace sock::internal
@@ -35,6 +36,7 @@ namespace sock::internal
 			return *this;
 		}
 
+		auto option(sock::Option, std::chrono::milliseconds) -> UnixSocket&;
 		auto option(sock::Option, int) -> UnixSocket&;
 		auto bind(sock::Address) -> UnixSocket&;
 		auto listen(size_t backlog) -> UnixSocket&;
