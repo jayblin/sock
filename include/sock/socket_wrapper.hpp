@@ -3,6 +3,7 @@
 
 #include "sock/internal/socket.hpp"
 #include "sock/utils.hpp"
+#include <chrono>
 #include <functional>
 #include <string_view>
 #include <utility>
@@ -42,6 +43,15 @@ namespace sock
 		auto option(sock::Option opt, int val) -> SocketWrapper&
 		{
 			m_sock.option(opt, val);
+			m_callback(m_sock);
+
+			return *this;
+		}
+
+		auto option(sock::Option opt, std::chrono::milliseconds duration)
+		    -> SocketWrapper&
+		{
+			m_sock.option(opt, duration);
 			m_callback(m_sock);
 
 			return *this;
@@ -113,6 +123,6 @@ namespace sock
 		sock::internal::Socket m_sock;
 		std::function<void(sock::internal::Socket&)> m_callback;
 	};
-} // namespace sock::internal
+} // namespace sock
 
 #endif // SOCK_INTERNAL_SOCKET_WRAPPER_H_

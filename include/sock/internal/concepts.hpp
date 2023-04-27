@@ -3,6 +3,7 @@
 
 #include "sock/buffer.hpp"
 #include "sock/utils.hpp"
+#include <chrono>
 #include <concepts>
 #include <functional>
 #include <string_view>
@@ -20,6 +21,10 @@ namespace sock::internal
 	{
 		{ T((CtorArgs){}) };
 		{ t.option((sock::Option){}, (int){}) } -> std::same_as<T&>;
+		{ t.option(
+			(sock::Option){},
+			(std::chrono::milliseconds){}
+		) } -> std::same_as<T&>;
 		{ t.bind((sock::Address){}) } -> std::same_as<T&>;
 		{ t.listen(max_connections) } -> std::same_as<T&>;
 		{ t.connect((sock::Address){}) } -> std::same_as<T&>;

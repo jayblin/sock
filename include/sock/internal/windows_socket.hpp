@@ -3,6 +3,7 @@
 
 #include "sock/buffer.hpp"
 #include "sock/utils.hpp"
+#include <chrono>
 
 namespace sock::internal
 {
@@ -38,7 +39,9 @@ namespace sock::internal
 			return *this;
 		}
 
+		auto option(sock::Option, const char* value, size_t value_size) -> WindowsSocket&;
 		auto option(sock::Option, int value) -> WindowsSocket&;
+		auto option(sock::Option, std::chrono::milliseconds) -> WindowsSocket&;
 		auto bind(sock::Address) -> WindowsSocket&;
 		auto listen(size_t backlog) -> WindowsSocket&;
 		auto connect(sock::Address) -> WindowsSocket&;

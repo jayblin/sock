@@ -104,18 +104,16 @@ sock::internal::WindowsSocket::~WindowsSocket()
 
 sock::internal::WindowsSocket& sock::internal::WindowsSocket::option(
     sock::Option option,
-    int value
+    const char* value,
+    size_t value_size
 )
 {
-	const auto str_value = std::to_string(value);
-	const auto char_value = str_value.c_str();
-
 	const auto result = setsockopt(
 	    m_sock,
 	    SOL_SOCKET,
 	    get_option_name(option),
-	    char_value,
-	    sizeof(char_value)
+	    value,
+	    value_size
 	);
 
 	if (result == SOCKET_ERROR)
@@ -126,11 +124,26 @@ sock::internal::WindowsSocket& sock::internal::WindowsSocket::option(
 	return *this;
 }
 
+sock::internal::WindowsSocket&
+    sock::internal::WindowsSocket::option(sock::Option opt, int value)
+{
+	return option(opt, (char*) (&value), sizeof(value));
+}
+
+sock::internal::WindowsSocket& sock::internal::WindowsSocket::option(
+    sock::Option opt,
+    std::chrono::milliseconds timeout
+)
+{
+	const auto ms = timeout.count();
+
+	return option(opt, (char*) (&ms), sizeof(ms));
+}
+
 const auto _bind = bind;
 
-sock::internal::WindowsSocket& sock::internal::WindowsSocket::bind(
-    sock::Address address
-)
+sock::internal::WindowsSocket&
+    sock::internal::WindowsSocket::bind(sock::Address address)
 {
 	addrinfo* info {nullptr};
 
@@ -235,8 +248,17 @@ const auto _receive = recv;
 void sock::internal::WindowsSocket::receive(sock::Buffer& buff, int flags)
 {
 	buff.reset();
-	auto n = _receive(m_sock, buff.buffer(), buff.max_size() - 1, flags);
-	buff.received_size(n);
+	const auto n = _receive(m_sock, buff.buffer(), buff.max_size() - 1, flags);
+
+	if (n == SOCKET_ERROR)
+	{
+		m_status = sock::Status::RECEIVE_ERROR;
+		buff.received_size(0);
+	}
+	else
+	{
+		buff.received_size(n);
+	}
 }
 
 const auto _send = send;

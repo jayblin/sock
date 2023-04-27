@@ -48,6 +48,7 @@ namespace sock
 		SHUTDOWN_ERROR = 7,
 		CONNECT_ERROR = 8,
 		OPTION_SET_ERROR = 9,
+		RECEIVE_ERROR = 10,
 	};
 
 	enum Flags
@@ -141,6 +142,8 @@ namespace sock
 				return "GOOD";
 			case sock::Status::OPTION_SET_ERROR:
 				return "OPTION_SET_ERROR";
+			case Status::RECEIVE_ERROR:
+				return "RECEIVE_ERROR";
 		}
 
 		return "UNKNOWN STATUS";
