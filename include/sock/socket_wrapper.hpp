@@ -27,7 +27,10 @@ namespace sock
 		    m_sock {sock::internal::Socket {std::move(args)}},
 		    m_callback {callback}
 		{
-			m_callback(m_sock);
+			if (m_callback)
+			{
+				m_callback(m_sock);
+			}
 		}
 
 		SocketWrapper(
@@ -37,13 +40,40 @@ namespace sock
 		    m_sock {std::move(socket)},
 		    m_callback {callback}
 		{
-			m_callback(m_sock);
+			if (m_callback)
+			{
+				m_callback(m_sock);
+			}
+		}
+
+		SocketWrapper(const SocketWrapper&) = delete;
+		SocketWrapper& operator=(const SocketWrapper&) = delete;
+
+		SocketWrapper(SocketWrapper&& other)
+		{
+			*this = std::move(other);
+		};
+
+		SocketWrapper& operator=(SocketWrapper&& other)
+		{
+			if (this != &other)
+			{
+				m_callback = other.m_callback;
+				m_sock = std::move(other.m_sock);
+
+				other.m_callback = nullptr;
+			}
+
+			return *this;
 		}
 
 		auto option(sock::Option opt, int val) -> SocketWrapper&
 		{
 			m_sock.option(opt, val);
-			m_callback(m_sock);
+			if (m_callback)
+			{
+				m_callback(m_sock);
+			}
 
 			return *this;
 		}
@@ -52,7 +82,10 @@ namespace sock
 		    -> SocketWrapper&
 		{
 			m_sock.option(opt, duration);
-			m_callback(m_sock);
+			if (m_callback)
+			{
+				m_callback(m_sock);
+			}
 
 			return *this;
 		}
@@ -60,7 +93,10 @@ namespace sock
 		auto bind(sock::Address address) -> SocketWrapper&
 		{
 			m_sock.bind(address);
-			m_callback(m_sock);
+			if (m_callback)
+			{
+				m_callback(m_sock);
+			}
 
 			return *this;
 		}
@@ -68,7 +104,10 @@ namespace sock
 		auto listen(size_t max_connections) -> SocketWrapper&
 		{
 			m_sock.listen(max_connections);
-			m_callback(m_sock);
+			if (m_callback)
+			{
+				m_callback(m_sock);
+			}
 
 			return *this;
 		}
@@ -76,7 +115,10 @@ namespace sock
 		auto connect(sock::Address address) -> SocketWrapper&
 		{
 			m_sock.connect(address);
-			m_callback(m_sock);
+			if (m_callback)
+			{
+				m_callback(m_sock);
+			}
 
 			return *this;
 		}
@@ -84,7 +126,10 @@ namespace sock
 		auto accept() -> SocketWrapper
 		{
 			SocketWrapper result {m_sock.accept(), m_callback};
-			m_callback(m_sock);
+			if (m_callback)
+			{
+				m_callback(m_sock);
+			}
 
 			return result;
 		}
@@ -92,13 +137,19 @@ namespace sock
 		auto receive(sock::Buffer& buffer, int flags = 0) -> void
 		{
 			m_sock.receive(buffer, flags);
-			m_callback(m_sock);
+			if (m_callback)
+			{
+				m_callback(m_sock);
+			}
 		}
 
 		auto send(std::string_view payload) -> SocketWrapper&
 		{
 			m_sock.send(payload);
-			m_callback(m_sock);
+			if (m_callback)
+			{
+				m_callback(m_sock);
+			}
 
 			return *this;
 		}
@@ -106,7 +157,10 @@ namespace sock
 		auto shutdown() -> void
 		{
 			m_sock.shutdown();
-			m_callback(m_sock);
+			if (m_callback)
+			{
+				m_callback(m_sock);
+			}
 		}
 
 		auto is_valid() const
@@ -121,7 +175,7 @@ namespace sock
 
 	private:
 		sock::internal::Socket m_sock;
-		std::function<void(sock::internal::Socket&)> m_callback;
+		std::function<void(sock::internal::Socket&)> m_callback {nullptr};
 	};
 } // namespace sock
 

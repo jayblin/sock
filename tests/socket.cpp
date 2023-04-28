@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <thread>
+#include <utility>
 
 GTEST_TEST(Socket, server_and_client_communication_test)
 {
@@ -59,7 +60,7 @@ GTEST_TEST(Socket, server_and_client_communication_test)
 		    ASSERT_EQ(sock::Status::GOOD, connection.status())
 		        << sock::error();
 
-			connection.shutdown();
+		    connection.shutdown();
 		    ASSERT_EQ(sock::Status::GOOD, connection.status())
 		        << sock::error();
 
@@ -180,7 +181,7 @@ GTEST_TEST(Socket, socket_can_handle_callbacks)
 		    ASSERT_LT(0, sock_str.length());
 		    ASSERT_STREQ("", sock_error.c_str());
 
-			connection.shutdown();
+		    connection.shutdown();
 		    ASSERT_EQ(sock::Status::GOOD, connection.status())
 		        << sock::error();
 
@@ -297,7 +298,7 @@ GTEST_TEST(Socket, does_wait_for_specified_time)
 		    ASSERT_EQ(sock::Status::GOOD, connection.status())
 		        << sock::error();
 
-			connection.shutdown();
+		    connection.shutdown();
 		    ASSERT_EQ(sock::Status::GOOD, connection.status())
 		        << sock::error();
 
@@ -377,34 +378,41 @@ GTEST_TEST(Socket, server_does_disconnect_when_client_hangs)
 	    {
 		    server.listen(1);
 
-		    auto connection = server.accept();
-		    ASSERT_EQ(sock::Status::GOOD, server.status()) << sock::error();
-		    ASSERT_EQ(sock::Status::GOOD, connection.status())
-		        << sock::error();
+		    auto conn = server.accept();
 
-		    sock::Buffer buff;
-		    ASSERT_EQ(0, buff.received_size());
+		    // Testing that socketw-wrapper can be moved without errors.
+		    {
+			    auto connection = std::move(conn);
 
-		    connection.receive(buff);
-		    ASSERT_EQ(sock::Status::GOOD, connection.status())
-		        << sock::error();
-		    ASSERT_EQ(11, buff.received_size());
-		    ASSERT_STREQ("Hello there", buff.buffer());
+			    ASSERT_EQ(sock::Status::GOOD, server.status())
+			        << sock::error();
+			    ASSERT_EQ(sock::Status::GOOD, connection.status())
+			        << sock::error();
 
-		    connection.send("General Kenobi!");
-		    ASSERT_EQ(sock::Status::GOOD, connection.status())
-		        << sock::error();
+			    sock::Buffer buff;
+			    ASSERT_EQ(0, buff.received_size());
 
-		    connection.receive(buff);
+			    connection.receive(buff);
+			    ASSERT_EQ(sock::Status::GOOD, connection.status())
+			        << sock::error();
+			    ASSERT_EQ(11, buff.received_size());
+			    ASSERT_STREQ("Hello there", buff.buffer());
 
-		    ASSERT_EQ(
-		        sock::Status::RECEIVE_ERROR,
-		        connection.status()
-		    ) << "Server should not receive data if client didnt send anything for 100ms.";
-		    ASSERT_STREQ("", buff.buffer());
-		    ASSERT_EQ(0, buff.received_size());
+			    connection.send("General Kenobi!");
+			    ASSERT_EQ(sock::Status::GOOD, connection.status())
+			        << sock::error();
 
-			connection.shutdown();
+			    connection.receive(buff);
+
+			    ASSERT_EQ(
+			        sock::Status::RECEIVE_ERROR,
+			        connection.status()
+			    ) << "Server should not receive data if client didnt send anything for 100ms.";
+			    ASSERT_STREQ("", buff.buffer());
+			    ASSERT_EQ(0, buff.received_size());
+
+			    connection.shutdown();
+		    }
 
 		    server_closed = true;
 	    }};
