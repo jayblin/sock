@@ -1,7 +1,7 @@
 #ifndef SOCK_INTERNAL_SOCKET_WRAPPER_H_
 #define SOCK_INTERNAL_SOCKET_WRAPPER_H_
 
-#include "sock/internal/socket.hpp"
+#include "sock/socket.hpp"
 #include "sock/utils.hpp"
 #include <chrono>
 #include <functional>
@@ -18,13 +18,13 @@ namespace sock
 	{
 	public:
 		SocketWrapper(sock::CtorArgs args) :
-		    m_sock {sock::internal::Socket {std::move(args)}} {};
+		    m_sock {sock::Socket {std::move(args)}} {};
 
 		SocketWrapper(
 		    sock::CtorArgs args,
-		    std::function<void(sock::internal::Socket&)> callback
+		    std::function<void(sock::Socket&)> callback
 		) :
-		    m_sock {sock::internal::Socket {std::move(args)}},
+		    m_sock {sock::Socket {std::move(args)}},
 		    m_callback {callback}
 		{
 			if (m_callback)
@@ -34,8 +34,8 @@ namespace sock
 		}
 
 		SocketWrapper(
-		    sock::internal::Socket&& socket,
-		    std::function<void(sock::internal::Socket&)> callback
+		    sock::Socket&& socket,
+		    std::function<void(sock::Socket&)> callback
 		) :
 		    m_sock {std::move(socket)},
 		    m_callback {callback}
@@ -175,8 +175,8 @@ namespace sock
 
 	private:
 		sock::internal::Socket m_sock;
-		std::function<void(sock::internal::Socket&)> m_callback {nullptr};
+		std::function<void(sock::Socket&)> m_callback {nullptr};
 	};
 } // namespace sock
 
-#endif // SOCK_INTERNAL_SOCKET_WRAPPER_H_
+#endif // SOCK_SOCKET_WRAPPER_H_

@@ -10,7 +10,7 @@ namespace sock::internal
 	class WindowsSocket
 	{
 	public:
-		WindowsSocket();
+		WindowsSocket() {};
 		WindowsSocket(SOCKET sock) :
 		    m_sock {sock} {};
 		WindowsSocket(CtorArgs);
@@ -39,7 +39,8 @@ namespace sock::internal
 			return *this;
 		}
 
-		auto option(sock::Option, const char* value, size_t value_size) -> WindowsSocket&;
+		auto option(sock::Option, const char* value, size_t value_size)
+		    -> WindowsSocket&;
 		auto option(sock::Option, int value) -> WindowsSocket&;
 		auto option(sock::Option, std::chrono::milliseconds) -> WindowsSocket&;
 		auto bind(sock::Address) -> WindowsSocket&;
