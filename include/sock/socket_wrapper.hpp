@@ -163,6 +163,14 @@ namespace sock
 			}
 		}
 
+		auto callback(std::function<void(sock::Socket&)> callback)
+		    -> SocketWrapper&
+		{
+			m_callback = callback;
+
+			return *this;
+		}
+
 		auto is_valid() const
 		{
 			return m_sock.is_valid();
