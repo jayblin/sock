@@ -120,6 +120,10 @@ sock::internal::WindowsSocket& sock::internal::WindowsSocket::option(
 	{
 		m_status = sock::Status::OPTION_SET_ERROR;
 	}
+	else
+	{
+		m_status = sock::Status::GOOD;
+	}
 
 	return *this;
 }
@@ -189,6 +193,10 @@ sock::internal::WindowsSocket&
 	{
 		m_status = sock::Status::LISTEN_ERROR;
 	}
+	else
+	{
+		m_status = sock::Status::GOOD;
+	}
 
 	return *this;
 }
@@ -256,6 +264,7 @@ void sock::internal::WindowsSocket::receive(sock::Buffer& buff, int flags)
 	}
 	else
 	{
+		m_status = sock::Status::GOOD;
 		buff.received_size(n);
 	}
 }
@@ -271,6 +280,10 @@ sock::internal::WindowsSocket&
 	{
 		m_status = sock::Status::SEND_ERROR;
 	}
+	else
+	{
+		m_status = sock::Status::GOOD;
+	}
 
 	return *this;
 }
@@ -284,5 +297,9 @@ void sock::internal::WindowsSocket::shutdown()
 	if (shutdown_result == SOCKET_ERROR)
 	{
 		m_status = sock::Status::SHUTDOWN_ERROR;
+	}
+	else
+	{
+		m_status = sock::Status::GOOD;
 	}
 }
